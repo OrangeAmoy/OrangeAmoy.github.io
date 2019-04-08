@@ -102,7 +102,7 @@
 <meta property="og:image" content="https://s2.ax1x.com/2019/04/05/ARj9AJ.png">
 <meta property="og:image" content="https://s2.ax1x.com/2019/04/05/ARXzBF.png">
 <meta property="og:image" content="https://s2.ax1x.com/2019/04/05/ARjAc6.gif">
-<meta property="og:updated_time" content="2019-04-08T03:20:22.339Z">
+<meta property="og:updated_time" content="2019-04-08T13:08:19.312Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="目标跟踪KCF算法简介与优化">
 <meta name="twitter:description" content="1. 算法简介&amp;emsp;&amp;emsp;首先目标跟踪大致可分为单目标跟踪与多目标跟踪，本文重点描述单目标跟踪。目标跟踪解决的问题是：第一帧给出目标矩形框，然后从后续帧开始目标跟踪算法能够跟踪该目标矩形框。通常来说，目标跟踪有几大难点：外观变形，光照变化，快速运动和运动模糊，背景相似干扰：">
@@ -459,16 +459,17 @@ J(\alpha) & = \alpha^T\phi(X)\phi(X)^T\phi(X)\phi(X)^T\alpha-2y^T\phi(X)\phi(X)^
 \frac{\partial J}{\partial\alpha}  & = 2\phi(X)\phi(X)^T\phi(X)\phi(X)^T\alpha+2\lambda\phi(X)\phi(X)^T\alpha-2\phi(X)\phi(X)^Ty=0 \\
 \alpha^*  & = (\phi(X)\phi(X)^T+\lambda I)^{-1}y
 \end{aligned}</script><p>&emsp;&emsp;注：$\phi(X)\phi(X)^T$类似于核空间变量的协方差矩阵，矩阵的转置乘以矩阵，一定可逆。<br>&emsp;&emsp;对于核方法，我们一般不知道非线性映射函数$\phi(x)$的具体形式，而只是刻画在核空间的核矩阵$\phi(X)\phi(X)^T$，那么我们令$K$表示核空间的核矩阵，由核函数得到，那么$K=\phi(X)\phi(X)^T$，于是  </p>
-<script type="math/tex; mode=display">\alpha^*=(K+\lambda I)^{-1}y</script><script type="math/tex; mode=display">f(z)=w^T\phi(z)=\alpha^T\phi(X)\phi(z)</script><p>&emsp;&emsp;这里通过循环矩阵的傅氏对角化简化计算，所以如果希望计算$\alpha$时可以同样将矩阵求逆运算变为元素运算，就希望将$K$对角化，所以希望找到一个核函数使对应的核矩阵式循环矩阵。<br>定理1<br>&emsp;&emsp;即核矩阵是循环矩阵应该满足两个条件：第一个样本和第二个样本都是由生成样本循环移位产生的，可以不是由同一个样本生成；满足$K(x,x’)=K(Mx,Mx’)$，其中$M$是排列矩阵。<br>&emsp;&emsp;证明：<br>&emsp;&emsp;设$x\in \Re^n$，则$x’=P^ix,{\forall x’\in C(x)}$，于是  </p>
+<script type="math/tex; mode=display">\alpha^*=(K+\lambda I)^{-1}y</script><script type="math/tex; mode=display">f(z)=w^T\phi(z)=\alpha^T\phi(X)\phi(z)</script><p>&emsp;&emsp;这里通过循环矩阵的傅氏对角化简化计算，所以如果希望计算$\alpha$时可以同样将矩阵求逆运算变为元素运算，就希望将$K$对角化，所以希望找到一个核函数使对应的核矩阵式循环矩阵。<br>定理1<br>&emsp;&emsp;即核矩阵是循环矩阵应该满足两个条件：第一个样本和第二个样本都是由生成样本循环移位产生的，可以不是由同一个样本生成；满足$K(x,x’)=K(Mx,Mx’)$，其中$M$是排列矩阵。<br>&emsp;&emsp;证明：<br>&emsp;&emsp;设$x\in \Re^n$，则$x’=P^ix,\{\forall x’\in C(x)\}$，于是  </p>
 <script type="math/tex; mode=display">\begin{aligned}
 K_{ij} & = \phi(x_i)^T\phi(x_j) \\
-        & = K(x_i,x_j) \\
-        & = K(P^ix,P^jx) \\
-        & = K(x,P^{j-i}x) \\
-        & = \phi(x)^T\phi(P^{j-i}x)
-\end{aligned}</script><p>因为$K$的第一行为$\phi(x)^T\phi(x<em>j),{j=1,2,\cdots,n}$所以$K</em>{ij}$相当于将第一行的第$j-i$个元素放到$K$的第$i$行$j$列上，那么$i,j\in {1,2,\cdots,n}$就得到了循环矩阵，所以$K$是循环矩阵。证明$j-i$表示除$n$的余数，因为这个过程是循环的。<br>&emsp;&emsp;证毕。<br>&emsp;&emsp;若$K$是循环矩阵，则  </p>
+       & = K(x_i,x_j) \\
+       & = K(P^ix,P^jx) \\
+       & = K(x,P^{j-i}x) \\
+       & = \phi(x)^T\phi(P^{j-i}x)
+\end{aligned}</script><p>&emsp;&emsp;因为$K$的第一行为$\phi(x)^T\phi(x_j),\{ j=1,2,\cdots,n\}$，所以$K_{ij}$相当于将第一行的第$j-i$个元素放到$K$的第$i$行$j$列上，那么$i,j\in \{ 1,2,\cdots,n\}$就得到了循环矩阵，所以$K$是循环矩阵。证明$j-i$表示除$n$的余数，因为这个过程是循环的。  </p>
+<p>&emsp;&emsp;证毕。<br>&emsp;&emsp;若$K$是循环矩阵，则  </p>
 <script type="math/tex; mode=display">\alpha = Fdiag(\hat{K}^{xx}+\lambda)^{-1}F^Hy</script><script type="math/tex; mode=display">\hat{\alpha}=\frac{\hat{y}}{(\hat{K}^{xx}+\lambda)^*}</script><p>&emsp;&emsp;其中$K^{xx}=\phi(x)^T\phi(X)^T$是$K$中第一行。</p>
-<h5 id="2-2-3-快速检测"><a href="#2-2-3-快速检测" class="headerlink" title="2.2.3 快速检测"></a>2.2.3 快速检测</h5><p>&emsp;&emsp;首先由训练样本和标签训练检测器，其中训练集是由目标区域和由其移位得到的若干样本组成，对应的标签是根据距离越近正样本可能性越大的准则赋值的，然后可以得到$\alpha$<br>&emsp;&emsp;待分类样本集，即待检测样本集，是由预测区域和由其移位得到的样本集合$z<em>j=P^jz$，那么就可以选择$f(z_j)=\alpha^T\phi(X)\phi(z_j)$最大的样本作为检测出的新目标区域,由$z_j$判断目标移动的位置。<br>&emsp;&emsp;定义$K^z$是测试样本和训练样本间在核空间的核矩阵$K</em>{ij}^z=\phi(z_i)^T\phi(x_j),K^z=\phi(X)\phi(Z)^T$。<br>&emsp;&emsp;由于核矩阵满足$K(x,x’)=K(Px,Px’)$,即$K(x_i,z_j)=K(P^ix,P^jz)$类似于定理1的证明可得$K^z$是循环矩阵。<br>&emsp;&emsp;于是得到各个测试样本的响应  </p>
+<h5 id="2-2-3-快速检测"><a href="#2-2-3-快速检测" class="headerlink" title="2.2.3 快速检测"></a>2.2.3 快速检测</h5><p>&emsp;&emsp;首先由训练样本和标签训练检测器，其中训练集是由目标区域和由其移位得到的若干样本组成，对应的标签是根据距离越近正样本可能性越大的准则赋值的，然后可以得到$\alpha$<br>&emsp;&emsp;待分类样本集，即待检测样本集，是由预测区域和由其移位得到的样本集合$z_j=P^jz$，那么就可以选择$f(z_j)=\alpha^T\phi(X)\phi(z_j)$最大的样本作为检测出的新目标区域,由$z_j$判断目标移动的位置。<br>&emsp;&emsp;定义$K^z$是测试样本和训练样本间在核空间的核矩阵$K_{ij}^z=\phi(z_i)^T\phi(x_j),K^z=\phi(X)\phi(Z)^T$。<br>&emsp;&emsp;由于核矩阵满足$K(x,x’)=K(Px,Px’)$,即$K(x_i,z_j)=K(P^ix,P^jz)$类似于定理1的证明可得$K^z$是循环矩阵。<br>&emsp;&emsp;于是得到各个测试样本的响应  </p>
 <script type="math/tex; mode=display">\begin{aligned}
 f(z) & = (\alpha^T\phi(X)\phi(Z)^T)^T=(K^z)^T\alpha=\mathscr{F}^{-1}(\hat{f}) \\
 f(z) & = Fdiag(\hat{K}^{xz})F^H\alpha \\
