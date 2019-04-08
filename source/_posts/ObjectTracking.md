@@ -3,6 +3,9 @@ title: 目标跟踪KCF算法简介与优化
 date: 2019-04-05 18:00:00
 tags:
 mathjax: true
+categories:
+- 技术文档
+- 机器学习
 ---
 
 ### 1. 算法简介  
@@ -11,6 +14,8 @@ mathjax: true
 <div align=center>
 <img src=https://s2.ax1x.com/2019/04/05/ARj13t.png width=500/>
 </div>  
+
+<!-- more -->
 平面外旋转，平面内旋转，尺度变化，遮挡和出视野等情况：
 
 <div align=center>
