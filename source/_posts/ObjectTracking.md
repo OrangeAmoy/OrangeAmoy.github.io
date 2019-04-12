@@ -8,7 +8,7 @@ categories:
 - 机器学习
 ---
 
-### 1. 算法简介  
+# 1. 算法简介  
 &emsp;&emsp;首先目标跟踪大致可分为单目标跟踪与多目标跟踪，本文重点描述单目标跟踪。目标跟踪解决的问题是：第一帧给出目标矩形框，然后从后续帧开始目标跟踪算法能够跟踪该目标矩形框。通常来说，目标跟踪有几大难点：外观变形，光照变化，快速运动和运动模糊，背景相似干扰：  
 
 <div align=center>
@@ -27,8 +27,8 @@ categories:
 &emsp;&emsp;[大话目标跟踪—背景介绍](https://zhuanlan.zhihu.com/p/26415747)  
 &emsp;&emsp;[benchmark_results](https://github.com/foolwood/benchmark_results)
 
-### 2. 算法案例  
-#### 2.1 背景介绍  
+# 2. 算法案例  
+## 2.1 背景介绍  
 &emsp;&emsp;2017年的时候，由于项目需求，需要研究一款在速度与性能均有较好表现的单目标跟踪算法，在当时通过多种算法选型，最终选择了KCF作为主要研究对象，现主要对相关滤波算法KCF进行简单介绍。  
 &emsp;&emsp;KCF是一种判别式跟踪方法，这类方法一般都是在跟踪的过程中训练一个目标检测器，使用目标检测器去检测下一帧预测位置是否是目标，然后再使用新检测结果去更新训练集进而更新目标检测器。而在训练目标检测器时一般选取目标区域为正样本，目标周围区域为负样本。  
 &emsp;&emsp;KCF的主要贡献可概括为：  
@@ -36,9 +36,9 @@ categories:
 - 将线性空间的岭回归通过核函数映射到非线性空间，在非线性空间通过求解一个对偶问题和某些常见的约束，同样的可以使用循环矩阵傅里叶空间对角化简化计算。
 - 给出了一种将多通道数据融入该算法的途径。
 
-#### 2.2 公式推导  
-##### 2.2.1 一维岭回归  
-###### 2.2.1.1 岭回归  
+## 2.2 公式推导  
+### 2.2.1 一维岭回归  
+#### 2.2.1.1 岭回归  
 &emsp;&emsp;设训练样本集$(x_i,y_i)$，那么其线性回归函数$f(x_i)=w^Tx_i$，$w$是列向量表示权重系数，可通过最小二乘法求解  
 $$\min_w\sum_i(f(x_i)-y_i)^2+\lambda\Vert w\Vert^2$$  
 &emsp;&emsp;其中$\lambda$用于控制系统的结构复杂性，保证分类器的泛化性能。  
@@ -49,7 +49,7 @@ $$w=(X^TX+\lambda I)^{-1}X^Ty$$
 &emsp;&emsp;写成复数域中形式  
 $$w=(X^HX+\lambda I)^{-1}X^Hy$$  
 &emsp;&emsp;其中$X^H$表示复共轭转置矩阵，$X^H=(x^*)^T$。  
-###### 2.2.1.2 循环矩阵  
+#### 2.2.1.2 循环矩阵  
 &emsp;&emsp;KCF中所有的训练样本是由目标样本循环位移得到的，向量的循环可由排列矩阵得到，比如  
 $$x=[x_1,x_2,\cdots,x_n]^T$$  
 $$P=
@@ -73,7 +73,7 @@ $$Px=[x_n,x_1,x_2,\cdots,x_{n-1}]^T$$
 <img src=https://s2.ax1x.com/2019/04/05/ARXI0g.png width=400/>
 </div>  
 
-###### 2.2.1.3 循环矩阵傅氏空间对角化  
+#### 2.2.1.3 循环矩阵傅氏空间对角化  
 &emsp;&emsp;所有的循环矩阵都能够在傅氏空间中使用离散傅里叶矩阵进行对角化  
 $$X=Fdiag(\hat{x})F^H$$  
 &emsp;&emsp;其中$\hat{x}$对应于生成$X$的向量$x$(就是$X$的第一行矩阵)的傅里叶变化后的值，$\hat{x}=\mathscr{F}(x)=\sqrt nFx$，$F$是离散傅里叶矩阵，是常量  
@@ -88,7 +88,7 @@ $$F=\frac{1}{\sqrt{n}}
 \end{matrix}
 \right]$$  
 &emsp;&emsp;关于矩阵的傅里叶对角化可参考[循环矩阵傅里叶对角化](https://blog.csdn.net/shenxiaolu1984/article/details/50884830)。  
-###### 2.2.1.4 傅氏对角化简化的岭回归  
+#### 2.2.1.4 傅氏对角化简化的岭回归  
 &emsp;&emsp;将$X=Fdiag(\hat{x})F^H$带入岭回归公式得到  
 $$\begin{aligned}
 w & = (Fdiag(\hat{x}^*)F^HFdiag(\hat{x})F^H+\lambda F^H)^{-1}Fdiag(\hat{x}^*)F^Hy \\
@@ -101,7 +101,7 @@ $$\mathscr{F}(w)=\mathscr{F}^*(\mathscr{F}^{-1}(\frac{\hat{x}^*}{\hat{x}^*\odot\
 $$\hat{w}=\frac{\hat{x}\odot\hat{y}}{\hat{x}^*\odot\hat{x}+\lambda}$$  
 &emsp;&emsp;这样就可以使用向量的点积运算取代矩阵运算，特别是求逆运算，大大提高了计算速度。  
 $$w=\mathscr{F}^{-1}(\hat{w})$$
-##### 2.2.2 核空间的岭回归  
+### 2.2.2 核空间的岭回归  
 &emsp;&emsp;我们希望找到一个非线性映射函数$\phi(x)$列向量，使映射后的样本在新空间中线性可分，那么在新空间中就可以使用岭回归来寻找一个分类器$f(x_i)=w^T\phi(x_i)$，所以这时候得到的权重系数为  
 $$w=\min_w\Vert \phi(X)w-y\Vert^2+\lambda\Vert w\Vert^2$$  
 &emsp;&emsp;$w$是$\phi(X)=[\phi(x_1),\phi(x_2),\cdots,\phi(x_n)]^T$行向量张成的空间中的一个向量，所以令$w=\sum_i\alpha_i\phi(x_i)$上式就变为  
@@ -124,18 +124,19 @@ $$f(z)=w^T\phi(z)=\alpha^T\phi(X)\phi(z)$$
 &emsp;&emsp;设$x\in \Re^n$，则$x'=P^ix,\{\forall x'\in C(x)\}$，于是  
 $$\begin{aligned}
 K_{ij} & = \phi(x_i)^T\phi(x_j) \\
-        & = K(x_i,x_j) \\
-        & = K(P^ix,P^jx) \\
-        & = K(x,P^{j-i}x) \\
-        & = \phi(x)^T\phi(P^{j-i}x)
+       & = K(x_i,x_j) \\
+       & = K(P^ix,P^jx) \\
+       & = K(x,P^{j-i}x) \\
+       & = \phi(x)^T\phi(P^{j-i}x)
 \end{aligned}$$  
-因为$K$的第一行为$\phi(x)^T\phi(x_j),\{j=1,2,\cdots,n\}$所以$K_{ij}$相当于将第一行的第$j-i$个元素放到$K$的第$i$行$j$列上，那么$i,j\in \{1,2,\cdots,n\}$就得到了循环矩阵，所以$K$是循环矩阵。证明$j-i$表示除$n$的余数，因为这个过程是循环的。  
+&emsp;&emsp;因为$K$的第一行为$\phi(x)^T\phi(x_j),\{ j=1,2,\cdots,n\}$，所以$K_{ij}$相当于将第一行的第$j-i$个元素放到$K$的第$i$行$j$列上，那么$i,j\in \{ 1,2,\cdots,n\}$就得到了循环矩阵，所以$K$是循环矩阵。证明$j-i$表示除$n$的余数，因为这个过程是循环的。  
+
 &emsp;&emsp;证毕。  
 &emsp;&emsp;若$K$是循环矩阵，则  
 $$\alpha = Fdiag(\hat{K}^{xx}+\lambda)^{-1}F^Hy$$  
 $$\hat{\alpha}=\frac{\hat{y}}{(\hat{K}^{xx}+\lambda)^*}$$  
 &emsp;&emsp;其中$K^{xx}=\phi(x)^T\phi(X)^T$是$K$中第一行。
-##### 2.2.3 快速检测  
+### 2.2.3 快速检测  
 &emsp;&emsp;首先由训练样本和标签训练检测器，其中训练集是由目标区域和由其移位得到的若干样本组成，对应的标签是根据距离越近正样本可能性越大的准则赋值的，然后可以得到$\alpha$  
 &emsp;&emsp;待分类样本集，即待检测样本集，是由预测区域和由其移位得到的样本集合$z_j=P^jz$，那么就可以选择$f(z_j)=\alpha^T\phi(X)\phi(z_j)$最大的样本作为检测出的新目标区域,由$z_j$判断目标移动的位置。  
 &emsp;&emsp;定义$K^z$是测试样本和训练样本间在核空间的核矩阵$K_{ij}^z=\phi(z_i)^T\phi(x_j),K^z=\phi(X)\phi(Z)^T$。  
@@ -146,7 +147,7 @@ f(z) & = (\alpha^T\phi(X)\phi(Z)^T)^T=(K^z)^T\alpha=\mathscr{F}^{-1}(\hat{f}) \\
 f(z) & = Fdiag(\hat{K}^{xz})F^H\alpha \\
 \hat{f} & = (\hat{K}^{xz})^*\hat{\alpha}
 \end{aligned}$$  
-##### 2.2.4 核矩阵的快速计算  
+### 2.2.4 核矩阵的快速计算  
 &emsp;&emsp;现在还存在的矩阵运算就是核矩阵的第一行的计算  
 $$K^{xx}=\phi(x)^T\phi(X)^T,K^{xz}=\phi(X)\phi(z)$$  
 &emsp;&emsp;内积和多项式核  
@@ -169,7 +170,7 @@ K^{xx'} & = h(\Vert x \Vert^2+\Vert x' \Vert^2-2C(x)x')^T  \\
 $$K^{xx'}=exp(-\frac{1}{\sigma}(\Vert x \Vert^2+\Vert x' \Vert^2-2\mathscr{F}^{-1}(\hat{x}^*\odot\hat{x}'))^T))$$  
 &emsp;&emsp;以上就是KCF的主要推导公式，且在一维情况下推导的结果，二维情况下的推导类似，推导过程略，详细推导过程见下方参考文档：   
 &emsp;&emsp;[KCF目标跟踪方法分析与总结](https://www.cnblogs.com/YiXiaoZhou/p/5925019.html)  
-#### 2.3 代码实现  
+## 2.3 代码实现  
 伪代码实现：  
 
 <div align=center>
@@ -222,13 +223,13 @@ cv::Rect KCFTracker::update(cv::Mat image)
 }
 ```
 
-#### 2.4 KCF可视化  
+## 2.4 KCF可视化  
 
 <div align=center>
 <img src=https://s2.ax1x.com/2019/04/05/ARXHts.png />
 </div>  
 
-### 3. 算法优化  
+# 3. 算法优化  
 &emsp;&emsp;在实际开发的过程中，从刚开始接触KCF源码，到算法部署与优化也进行了不少工作，不过由于年代久远而且当时没有详尽的记录优化内容，所以这里不去深究细节优化。但是在实际的算法部署过程中，在不同的场景下遇到了不同的问题，没有一个算法是可以适配任何场景的，需要的就是开发人员能够针对不同的场景进行对应的优化，解决场景适配问题。  
 &emsp;&emsp;在实际的开发过程中，针对不同的场景，目标跟踪会受到不同的挑战，诸如文章开头提到的外观变形，光照变化，快速运动和运动模糊，背景相似干扰，平面外旋转，平面内旋转，尺度变化，遮挡和出视野等情况。在解决这些问题的过程中，总结技术创新点，并将这些技术创新点形成专利。在整个目标跟踪项目研发过程中，申请了四个发明专利，目前均处于实质审查阶段。在这里不禁又要吐嘈下公司的办事效率，发明专利的申请流程整整在公司内部拖了一年，始终无人问津，如果不是自己去跟踪，估计还要再拖好久。Orz...  
 &emsp;&emsp;主要优化的内容有：引入背景信息和自适应回归标签改善跟踪性能，引入显著性检测提高复杂背景下的跟踪性能，提出一种快速的显著性检测方法等等。比较有意思的工作个人认为是利用颜色标签快速实现显著性检测的相关工作，虽然原理简单，但是对复杂背景下的目标跟踪性能提升是明显的。  
