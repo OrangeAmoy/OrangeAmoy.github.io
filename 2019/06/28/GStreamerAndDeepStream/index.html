@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="1. 写在前面&amp;emsp;&amp;emsp;本周需要在部门内部分享关于DeepStream的相关内容，借此机会重新再梳理一遍相关知识，本文主要为对应PPT的结构大纲，已简要介绍为主。   2. 前言：如何构建视频分析应用&amp;emsp;&amp;emsp;构建一个视频分析应用，需要考虑的内容有：视频流获取、视频流解码、预处理、算法推理、数据编码、数据显示、数据传输等。常常需要引入一些第三方的开发包，如OpenCV，">
+<meta name="keywords" content="人工智能、计算机视觉、程序员">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一站式视频分析应用:由GStreamer到DeepStream">
+<meta property="og:url" content="http://orangeamoy.com/2019/06/28/GStreamerAndDeepStream/index.html">
+<meta property="og:site_name" content="橙色空间">
+<meta property="og:description" content="1. 写在前面&amp;emsp;&amp;emsp;本周需要在部门内部分享关于DeepStream的相关内容，借此机会重新再梳理一遍相关知识，本文主要为对应PPT的结构大纲，已简要介绍为主。   2. 前言：如何构建视频分析应用&amp;emsp;&amp;emsp;构建一个视频分析应用，需要考虑的内容有：视频流获取、视频流解码、预处理、算法推理、数据编码、数据显示、数据传输等。常常需要引入一些第三方的开发包，如OpenCV，">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://s2.ax1x.com/2019/06/27/Zuiozd.png">
+<meta property="og:image" content="https://s2.ax1x.com/2019/06/27/ZuifIO.png">
+<meta property="og:image" content="https://s2.ax1x.com/2019/06/27/Zuics1.png">
+<meta property="og:image" content="https://s2.ax1x.com/2019/06/27/ZuibLt.png">
+<meta property="og:image" content="https://s2.ax1x.com/2019/06/27/ZuiRZ6.png">
+<meta property="og:image" content="https://s2.ax1x.com/2019/06/27/ZuiOdf.png">
+<meta property="og:image" content="https://s2.ax1x.com/2019/06/27/Zui7QA.png">
+<meta property="og:image" content="https://s2.ax1x.com/2019/04/12/AbLT1O.png">
+<meta property="og:image" content="https://s2.ax1x.com/2019/06/27/ZuiWdK.png">
+<meta property="og:image" content="https://s2.ax1x.com/2019/06/27/Zui5Je.png">
+<meta property="og:image" content="https://s2.ax1x.com/2019/06/27/ZuiIRH.png">
+<meta property="og:image" content="https://s2.ax1x.com/2019/06/27/ZuiHsI.png">
+<meta property="og:image" content="https://s2.ax1x.com/2019/06/27/Zui4iD.png">
+<meta property="og:image" content="https://s2.ax1x.com/2019/06/27/ZuiLeP.png">
+<meta property="og:updated_time" content="2019-06-28T01:14:17.706Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一站式视频分析应用:由GStreamer到DeepStream">
+<meta name="twitter:description" content="1. 写在前面&amp;emsp;&amp;emsp;本周需要在部门内部分享关于DeepStream的相关内容，借此机会重新再梳理一遍相关知识，本文主要为对应PPT的结构大纲，已简要介绍为主。   2. 前言：如何构建视频分析应用&amp;emsp;&amp;emsp;构建一个视频分析应用，需要考虑的内容有：视频流获取、视频流解码、预处理、算法推理、数据编码、数据显示、数据传输等。常常需要引入一些第三方的开发包，如OpenCV，">
+<meta name="twitter:image" content="https://s2.ax1x.com/2019/06/27/Zuiozd.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://orangeamoy.com/2019/06/28/GStreamerAndDeepStream/">
+
+
+
+
+
+  <title>一站式视频分析应用:由GStreamer到DeepStream | 橙色空间</title>
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?bcd436e3a081d5895b3cf9ec2dd0003e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">橙色空间</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">橙子的个人博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://orangeamoy.com/2019/06/28/GStreamerAndDeepStream/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Orange">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="橙色空间">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">一站式视频分析应用:由GStreamer到DeepStream</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-28T11:00:00+08:00">
+                2019-06-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术文档/" itemprop="url" rel="index">
+                    <span itemprop="name">技术文档</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术文档/视频应用/" itemprop="url" rel="index">
+                    <span itemprop="name">视频应用</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2019/06/28/GStreamerAndDeepStream/" class="leancloud_visitors" data-flag-title="一站式视频分析应用:由GStreamer到DeepStream">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="1-写在前面"><a href="#1-写在前面" class="headerlink" title="1. 写在前面"></a>1. 写在前面</h1><p>&emsp;&emsp;本周需要在部门内部分享关于DeepStream的相关内容，借此机会重新再梳理一遍相关知识，本文主要为对应PPT的结构大纲，已简要介绍为主。  </p>
+<h1 id="2-前言：如何构建视频分析应用"><a href="#2-前言：如何构建视频分析应用" class="headerlink" title="2. 前言：如何构建视频分析应用"></a>2. 前言：如何构建视频分析应用</h1><p>&emsp;&emsp;构建一个视频分析应用，需要考虑的内容有：视频流获取、视频流解码、预处理、算法推理、数据编码、数据显示、数据传输等。常常需要引入一些第三方的开发包，如OpenCV，FFmpeg，Caffe，TensorRT，OpenGL等。  </p>
+<div align="center">
+<img src="https://s2.ax1x.com/2019/06/27/Zuiozd.png" width="600/">
+</div>
+
+<a id="more"></a>
+<h1 id="3-基础：GStreamer"><a href="#3-基础：GStreamer" class="headerlink" title="3. 基础：GStreamer"></a>3. 基础：GStreamer</h1><h2 id="3-1-GStreamer简介与框架"><a href="#3-1-GStreamer简介与框架" class="headerlink" title="3.1 GStreamer简介与框架"></a>3.1 GStreamer简介与框架</h2><p>&emsp;&emsp;GStreamer是一个用于开发流式多媒体应用的跨平台开源框架，应用程序可以通过管道(Pipeline)的方式，将多媒体处理的各个步骤串联起来，达到预期的效果。GStreamer整体功能的核心为Pipeline框架以及用于扩展功能的插件。<br>&emsp;&emsp;Pipeline用于安排数据流图，明确数据流处理过程。通过GStreamer多媒体数据协商机制和同步机制，Pipeline能够很好地处理流式数据。<br>&emsp;&emsp;用于扩展功能的插件，开发者可以灵活利用已有插件，而且还可以自定义特定功能的插件。<br>&emsp;&emsp;GStreamer整体架构如下：  </p>
+<div align="center">
+<img src="https://s2.ax1x.com/2019/06/27/ZuifIO.png" width="600/">
+</div>
+
+<p>&emsp;&emsp;gstreamer tools and media applications<br>&emsp;&emsp;工具与媒体应用层。比如gstreamer自带的一些工具(gst-launch，gst-inspect等)，以及基于gstreamer封装的库(gst-player，gst-rtsp-server，gst-editing-services等)根据不同场景实现的应用。  </p>
+<p>&emsp;&emsp;gstreamer core framework<br>&emsp;&emsp;主要提供：  </p>
+<ul>
+<li>上层应用所需接口  </li>
+<li>Plugin的框架  </li>
+<li>Pipline的框架  </li>
+<li>数据在各个Elementi间的传输及处理机制  </li>
+<li>多个媒体(Streaming)间的同步(比如音视频同步)  </li>
+<li>其他各种所需的工具库  </li>
+</ul>
+<p>&emsp;&emsp;gstreamer plusins and 3rd party plugins<br>&emsp;&emsp;插件层，提供各种插件，实现具体的数据处理，应用层不需要关注插件的细节，会由gstreamer core framework层负责插件的加载及管理。主要分为以下类别：  </p>
+<ul>
+<li>Protocols: 负责各种协议的处理，file，http，rtsp等。  </li>
+<li>Sources: 负责数据源的处理，alsa，v4l2，tcp/udp等。  </li>
+<li>Formats: 负责媒体容器的处理，avi，mp4，ogg等。  </li>
+<li>Codecs: 负责媒体的编解码，mp3，vorbis等。  </li>
+<li>Filters: 负责媒体流的处理，converters，mixers，effects等。  </li>
+<li>Sinks: 负责媒体流输出到指定设备或目的地，alsa，xvideo，tcp/udp等。  </li>
+</ul>
+<p>&emsp;&emsp;Gstreamer框架根据各个模块的成熟度以及所使用的开源协议，将core及plugins置于不同的源码包中：  </p>
+<ul>
+<li>gstreamer: 包含core framework及core elements。</li>
+<li>gst-plugins-base: gstreamer应用所需的必要插件。</li>
+<li>gst-plugins-good: 高质量的采用LGPL授权的插件。</li>
+<li>gst-plugins-ugly: 高质量，但使用了GPL等其他授权方式的库的插件，比如使用GPL的x264，x265。</li>
+<li>gst-plugins-bad: 质量有待提高的插件，成熟后可以移到good插件列表中。</li>
+<li>gst-libav: 对libav封装，使其能在gstreamer框架中使用。</li>
+</ul>
+<h2 id="3-2-GStreamer基础概念"><a href="#3-2-GStreamer基础概念" class="headerlink" title="3.2 GStreamer基础概念"></a>3.2 GStreamer基础概念</h2><h3 id="3-2-1-Element"><a href="#3-2-1-Element" class="headerlink" title="3.2.1 Element"></a>3.2.1 Element</h3><p>&emsp;&emsp;Element是Gstreamer中最重要的对象类型之一。一个element实现一个功能（读取文件，解码，输出等），程序需要创建多个element，并按顺序将其串连起来，构成一个完整的pipeline。如下图所示，通过将source、filter、sink三种element连起来，可以实现对pipeline中传输数据格式的过滤。  </p>
+<div align="center">
+<img src="https://s2.ax1x.com/2019/06/27/Zuics1.png" width="600/">
+</div>  
+
+<p>&emsp;&emsp;Element主要有三种、如 source element、sink element、common element。source element，主要是作为一个pipeline中的source节点，是数据源。source element只有src pad，即只有输出口。sink element ，作为pipline的end节点。sink element 只有sink pad，即只有输入口。common element，作为pipline中的中间数据处理单元，既有sink pad，也有src pad，通常有：Filters, convertors, demuxers, muxers and codecs等。</p>
+<h3 id="3-2-2-Pad"><a href="#3-2-2-Pad" class="headerlink" title="3.2.2 Pad"></a>3.2.2 Pad</h3><p>&emsp;&emsp;Pad是一个element的输入/输出接口，分为src pad（生产数据）和sink pad（消费数据）两种。<br>&emsp;&emsp;两个element必须通过pad才能连接起来，pad拥有当前element能处理数据类型的能力（capabilities），会在连接时通过比较src pad和sink pad中所支持的能力，来选择最恰当的数据类型用于传输，如果element不支持，程序会直接退出。在element通过pad连接成功后，数据会从上一个element的src pad传到下一个element的sink pad然后进行处理。  </p>
+<h3 id="3-2-3-Bin和Pipeline"><a href="#3-2-3-Bin和Pipeline" class="headerlink" title="3.2.3 Bin和Pipeline"></a>3.2.3 Bin和Pipeline</h3><p>&emsp;&emsp;Bin是一个容器，用于管理多个element，改变bin的状态时，bin会自动去修改所包含的element的状态，也会转发所收到的消息。如果没有bin，我们需要依次操作我们所使用的element。通过bin降低了应用的复杂度。<br>&emsp;&emsp;Pipeline继承自bin，为程序提供一个bus用于传输消息，并且对所有子element进行同步。当将pipeline的状态设置为PLAYING时，pipeline会在一个/多个新的线程中通过element处理数据。<br>&emsp;&emsp;下面我们通过一个文件播放的例子来熟悉上述提及的概念：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ gst-launch-1.0 filesrc location=sintel_trailer-480p.ogv ! oggdemux name=demux ! queue ! vorbisdec ! autoaudiosink demux. ! queue ! theoradec ! videoconvert ! autovideosink</span><br></pre></td></tr></table></figure></p>
+<p>通过上面的命令播放文件时，会创建如下pipeline：  </p>
+<div align="center">
+<img src="https://s2.ax1x.com/2019/06/27/ZuibLt.png" width="800/">
+</div>  
+
+<p>&emsp;&emsp;可以看到这个pipeline由8个element构成，每个element都实现各自的功能：<br>&emsp;&emsp;filesrc读取文件，oggdemux解析文件，分别提取audio，video数据，queue缓存数据，vorbisdec解码audio，autoaudiosink自动选择音频设备并输出，theoradec解码video，videoconvert转换video数据格式，autovideosink自动选择显示设备并输出。  </p>
+<h3 id="3-2-4-Plugins"><a href="#3-2-4-Plugins" class="headerlink" title="3.2.4 Plugins"></a>3.2.4 Plugins</h3><p>&emsp;&emsp;当遇到一些GStreamer本身无法支持的功能的时候，可以借由插件的方式实现。根据GStreamer插件提供的模板自定义插件，从而实现功能的自定义开发，给开发者较高的自由度。  </p>
+<h2 id="3-3-GStreamer数据消息交互"><a href="#3-3-GStreamer数据消息交互" class="headerlink" title="3.3 GStreamer数据消息交互"></a>3.3 GStreamer数据消息交互</h2><p>&emsp;&emsp;在pipeline运行的过程中，各个element以及应用之间不可避免的需要进行数据消息的传输，gstreamer提供了bus系统以及多种数据类型（Buffers、Events、Messages，Queries）来达到此目的：  </p>
+<div align="center">
+<img src="https://s2.ax1x.com/2019/06/27/ZuiRZ6.png" width="800/">
+</div>  
+
+<h3 id="3-3-1-Bus"><a href="#3-3-1-Bus" class="headerlink" title="3.3.1 Bus"></a>3.3.1 Bus</h3><p>&emsp;&emsp;Bus是gstreamer内部用于将消息从内部不同的streaming线程，传递到bus线程，再由bus所在线程将消息发送到应用程序。应用程序只需要向bus注册消息处理函数，即可接收到pipline中各element所发出的消息，使用bus后，应用程序就不用关心消息是从哪一个线程发出的，避免了处理多个线程同时发出消息的复杂性。  </p>
+<h3 id="3-3-2-Buffers"><a href="#3-3-2-Buffers" class="headerlink" title="3.3.2 Buffers"></a>3.3.2 Buffers</h3><p>&emsp;&emsp;用于从sources到sinks的媒体数据传输。  </p>
+<h3 id="3-3-3-Events"><a href="#3-3-3-Events" class="headerlink" title="3.3.3 Events"></a>3.3.3 Events</h3><p>&emsp;&emsp;用于element之间或者应用到element之间的信息传递，比如播放时的seek操作是通过event实现的。  </p>
+<h3 id="3-3-4-Messages"><a href="#3-3-4-Messages" class="headerlink" title="3.3.4 Messages"></a>3.3.4 Messages</h3><p>&emsp;&emsp;是由element发出的消息，通过bus，以异步的方式被应用程序处理。通常用于传递errors, tags, state changes, buffering state, redirects等消息。消息处理是线程安全的。由于大部分消息是通过异步方式处理，所以会在应用程序里存在一点延迟，如果要及时的相应消息，需要在streaming线程捕获处理。  </p>
+<h3 id="3-3-5-Queries"><a href="#3-3-5-Queries" class="headerlink" title="3.3.5 Queries"></a>3.3.5 Queries</h3><p>&emsp;&emsp;用于应用程序向gstreamer查询总时间，当前时间，文件大小等信息。  </p>
+<h2 id="3-4-GStreamer实例分析"><a href="#3-4-GStreamer实例分析" class="headerlink" title="3.4 GStreamer实例分析"></a>3.4 GStreamer实例分析</h2><p>&emsp;&emsp;Gstreamer自带了gst-inspect-1.0和gst-launch-1.0等其他命令行工具，我们可以使用这些工具完成常见的处理任务。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ gst-inspect-1.0</span><br></pre></td></tr></table></figure></p>
+<p>&emsp;&emsp;查看gstreamer的plugin、element的信息。直接将plugin/element的类型作为参数，会列出其详细信息。如果不跟任何参数，会列出当前系统gstreamer所能查找到的所有插件，如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line">$ gst-inspect-1.0 videoconvert  </span><br><span class="line">Factory Details:</span><br><span class="line">    Rank                     none (0)</span><br><span class="line">    Long-name                Colorspace converter</span><br><span class="line">    Klass                    Filter/Converter/Video</span><br><span class="line">    Description              Converts video from one colorspace to another</span><br><span class="line">    Author                   GStreamer maintainers ...</span><br><span class="line"></span><br><span class="line">Plugin Details:</span><br><span class="line">    Name                     videoconvert</span><br><span class="line">    Description              Colorspace conversion</span><br><span class="line">    Filename                 ...libgstvideoconvert.so</span><br><span class="line">    Version                  1.8.3</span><br><span class="line">    License                  LGPL</span><br><span class="line">    Source module            gst-plugins-base</span><br><span class="line">    Source release date      2016-08-19</span><br><span class="line">    Binary package           GStreamer Base Plugins (Ubuntu)</span><br><span class="line">    Origin URL               https://launchpad.net/distros/ubuntu/...</span><br><span class="line"></span><br><span class="line">GObject</span><br><span class="line">+----GInitiallyUnowned</span><br><span class="line">    +----GstObject</span><br><span class="line">            +----GstElement</span><br><span class="line">                +----GstBaseTransform</span><br><span class="line">                        +----GstVideoFilter</span><br><span class="line">                            +----GstVideoConvert</span><br><span class="line"></span><br><span class="line">Pad Templates:</span><br><span class="line">    SRC template: &apos;src&apos;</span><br><span class="line">        Availability: Always</span><br><span class="line">        Capabilities:</span><br><span class="line">        video/x-raw</span><br><span class="line">            format: &#123; I420, YV12, RGBA, ... &#125;</span><br><span class="line">            width: [ 1, 2147483647 ]</span><br><span class="line">            height: [ 1, 2147483647 ]</span><br><span class="line">            framerate: [ 0/1, 2147483647/1 ]</span><br><span class="line"></span><br><span class="line">    SINK template: &apos;sink&apos;</span><br><span class="line">        Availability: Always</span><br><span class="line">        Capabilities:</span><br><span class="line">        video/x-raw</span><br><span class="line">            format: &#123; I420, YV12, RGBA, ... &#125;</span><br><span class="line">            width: [ 1, 2147483647 ]</span><br><span class="line">            height: [ 1, 2147483647 ]</span><br><span class="line">            framerate: [ 0/1, 2147483647/1 ]</span><br><span class="line"></span><br><span class="line">Pads:</span><br><span class="line">    SINK: &apos;sink&apos;</span><br><span class="line">        Pad Template: &apos;sink&apos;</span><br><span class="line">    SRC: &apos;src&apos;</span><br><span class="line">        Pad Template: &apos;src&apos;</span><br><span class="line"></span><br><span class="line">Element Properties:</span><br><span class="line">    name                : The name of the object</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            String. Default: &quot;videoconvert0&quot;</span><br><span class="line">    parent              : The parent of the object</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Object of type &quot;GstObject&quot;</span><br><span class="line">    qos                 : Handle Quality-of-Service events</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Boolean. Default: true</span><br><span class="line">    dither              : Apply dithering while converting</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Enum &quot;GstVideoDitherMethod&quot; Default: 4, &quot;bayer&quot;</span><br><span class="line">                            (0): none             - GST_VIDEO_DITHER_NONE</span><br><span class="line">                            (1): verterr          - GST_VIDEO_DITHER_VERTERR</span><br><span class="line">                            (2): floyd-steinberg  - GST_VIDEO_DITHER_FLOYD_STEINBERG</span><br><span class="line">                            (3): sierra-lite      - GST_VIDEO_DITHER_SIERRA_LITE</span><br><span class="line">                            (4): bayer            - GST_VIDEO_DITHER_BAYER</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ gst-launch-1.0</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;用于创建及执行一个Pipline，因此通常使用gst-launch先验证相关功能，然后再编写相应应用。如：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ gst-launch-1.0 rtspsrc location=rtsp://admin:admin@192.168.18.248:554 ! rtph264depay ! h264parse ! avdec_h264 ! x264enc ! avdec_h264 ! videoconvert ! autovideosink</span><br></pre></td></tr></table></figure></p>
+<p>&emsp;&emsp;回顾前面提到的构建视频分析应用，常规方法可能需要根据不同的功能模块采用不同的开发库，并且需要开发者自行管理数据流。如：  </p>
+<div align="center">
+<img src="https://s2.ax1x.com/2019/06/27/ZuiOdf.png" width="600/">
+</div>  
+
+<p>当采用GStreamer之后，实现如下：  </p>
+<div align="center">
+<img src="https://s2.ax1x.com/2019/06/27/Zui7QA.png" width="600/">
+</div>  
+
+<p>借助GStreamer本身自带的插件，可以满足开发需求，且数据流的管理由GStreamer内部完成，不需要用户自行管理。  </p>
+<p>&emsp;&emsp;通过前面的介绍，对GStreamer有了一个初步的了解。通过管线机制，能够快速组织各种组件，完成开发目标。当需要自定义功能时，可以自己编写插件，注册到GStreamer中，实现特定功能。  </p>
+<h1 id="4-进阶：DeepStream"><a href="#4-进阶：DeepStream" class="headerlink" title="4. 进阶：DeepStream"></a>4. 进阶：DeepStream</h1><h2 id="4-1-DeepStream简介与框架"><a href="#4-1-DeepStream简介与框架" class="headerlink" title="4.1 DeepStream简介与框架"></a>4.1 DeepStream简介与框架</h2><p>&emsp;&emsp;DeepStream是NVIDIA推出的一个针对智能视频分析应用和多传感器处理的工具包，其主要特性为能够利用硬件加速技术将深度神经网络与其他的复杂处理任务带入流处理管道，让用户更专注于构建神经网络任务，而不是从头开始搭建端到端的解决方案。<br>&emsp;&emsp;DeepStream的典型应用架构如图所示：  </p>
+<div align="center">
+<img src="https://s2.ax1x.com/2019/04/12/AbLT1O.png" width="800/">
+</div>  
+
+<p>&emsp;&emsp;从本质上来说DeepStream是NVIDIA基于GStreamer的插件系统开发的，自然也继承了GStreamer的特性。NVIDIA将自家的技术，如：TensorRT, cuDNN，CUDA, Video SDK等以插件的形式集成进GStreamer当中，以管线的形式进行智能视频分析应用的开发，将各个功能封装成组件，通过将对应功能的组件插入管线中，启动管线使数据按照要求在管线内流动，数据经过解析、编解码、预处理、算法处理后进行图像渲染或者发送到云端。下面对上述架构中的模块进行简要说明：  </p>
+<ul>
+<li>Video Decode: 视频解码模块。支持摄像头输入，RTSP格式输入，视频文件输入。  </li>
+<li>Stream Mux: 数据聚合模块。能够将多路视频数据图像进行聚合，以批量的形式提供给下游推理引擎进行算法推理。  </li>
+<li>Primary Detector: 一级检测。基于TensorRT的神经网络推理引擎，主要实现对图像中的目标进行检测。  </li>
+<li>Object Tracker: 目标跟踪。对检测的目标进行跟踪，基于OpenCV实现。  </li>
+<li>Secondary Classifiers: 二级分类。基于TensorRT的神经网络推理引擎，在一级检测的基础上对目标进行分类，或者结构化信息提取。  </li>
+<li>Tiler: 视频阵列。将多个视频以阵列的形式进行组合，形成照片墙。  </li>
+<li>OnScrenn Display: 视频结构化信息叠加。能够将结构化信息叠加在视频上，例如画矩形框，叠加文字信息等。  </li>
+<li>Renderer: 视频渲染。对接受到的视频帧进行渲染并显示。  </li>
+<li>Message Converter: 消息转换。将视频结构化信息转换成对应的消息格式，如JSON。  </li>
+<li>Message Broker: 消息发送。将视频结构化信息等发送到云端。  </li>
+</ul>
+<h2 id="4-2-DeepStream组件分析"><a href="#4-2-DeepStream组件分析" class="headerlink" title="4.2 DeepStream组件分析"></a>4.2 DeepStream组件分析</h2><p>&emsp;&emsp;前面说到，DeepStream组件是NVIDIA基于GStreamer的插件开发的，将自家的技术栈集成进GStreamer中。DeepStream组件有nvinfer、nvtracker、nvstreammux、nvstreamdemux、nvmultistreamtiler、nvosd、nvvidconv、nvbboxfilter、nvdewarper、nvaislemetadata、nvspot、nvvideocodecs、nvmsgconv、nvmsgbroker等。下面针对几个常用的组件进行说明。<br>&emsp;&emsp;nvinfer<br>&emsp;&emsp;nvinfer是算法推理引擎插件，利用TensorRT进行神经网络推理。  </p>
+<div align="center">
+<img src="https://s2.ax1x.com/2019/06/27/ZuiWdK.png" width="600/">
+</div>  
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line">Factory Details:</span><br><span class="line">    Rank                     primary (256)</span><br><span class="line">    Long-name                NvInfer</span><br><span class="line">    Klass                    NvInfer</span><br><span class="line">    Description              Gstreamer Inference Element</span><br><span class="line">    Author                   NVIDIA Corporation.</span><br><span class="line"></span><br><span class="line">Plugin Details:</span><br><span class="line">    Name                     nvinfer</span><br><span class="line">    Description              Gstreamer plugin for Inferencing</span><br><span class="line">    Filename                 .../libnvdsgst_infer.so</span><br><span class="line">    Version                  3.0</span><br><span class="line">    License                  Proprietary</span><br><span class="line">    Source module            nvinfer</span><br><span class="line">    Binary package           GStreamer NV Infer Plugin</span><br><span class="line">    Origin URL               http://nvidia.com/</span><br><span class="line"></span><br><span class="line">GObject</span><br><span class="line">+----GInitiallyUnowned</span><br><span class="line">    +----GstObject</span><br><span class="line">            +----GstElement</span><br><span class="line">                +----GstBaseTransform</span><br><span class="line">                        +----GstNvInfer</span><br><span class="line"></span><br><span class="line">Pad Templates:</span><br><span class="line">    SINK template: &apos;sink&apos;</span><br><span class="line">        Availability: Always</span><br><span class="line">        Capabilities:</span><br><span class="line">        video/x-raw(memory:NVMM)</span><br><span class="line">                    format: &#123; NV12, RGBA &#125;</span><br><span class="line">                    width: [ 1, 2147483647 ]</span><br><span class="line">                    height: [ 1, 2147483647 ]</span><br><span class="line">                framerate: [ 0/1, 2147483647/1 ]</span><br><span class="line"></span><br><span class="line">    SRC template: &apos;src&apos;</span><br><span class="line">        Availability: Always</span><br><span class="line">        Capabilities:</span><br><span class="line">        video/x-raw(memory:NVMM)</span><br><span class="line">                    format: &#123; NV12, RGBA &#125;</span><br><span class="line">                    width: [ 1, 2147483647 ]</span><br><span class="line">                    height: [ 1, 2147483647 ]</span><br><span class="line">                framerate: [ 0/1, 2147483647/1 ]</span><br><span class="line"></span><br><span class="line">Element Properties:</span><br><span class="line">    name                : The name of the object</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            String. Default: &quot;nvinfer0&quot;</span><br><span class="line">    gie-mode            : Select GIE Mode (1=Primary Mode  2=Secondary Mode)</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Unsigned Integer. Range: 1 - 2 Default: 1 </span><br><span class="line">    model-engine-file   : Absolute path to the engine file for the model</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            String. Default: null</span><br><span class="line">    batch-size          : Number of units to be inferred together in a batch</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Unsigned Integer. Range: 1 - 1024 Default: 0 </span><br><span class="line">    gpu-id              : Set GPU Device ID</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Unsigned Integer. Range: 0 - 4294967295 Default: 0</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;nvstreammux<br>&emsp;&emsp;nvstreammux是数据聚合模块，能够将多个输入通道数据进行聚合，为算法批量处理做准备。  </p>
+<div align="center">
+<img src="https://s2.ax1x.com/2019/06/27/Zui5Je.png" width="600/">
+</div>  
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">Pad Templates:</span><br><span class="line">    SRC template: &apos;src&apos;</span><br><span class="line">        Availability: Always</span><br><span class="line">        Capabilities:</span><br><span class="line">        video/x-raw(memory:NVMM)</span><br><span class="line">                    format: &#123; NV12, RGBA &#125;</span><br><span class="line">                    width: [ 1, 2147483647 ]</span><br><span class="line">                    height: [ 1, 2147483647 ]</span><br><span class="line">                framerate: [ 0/1, 2147483647/1 ]</span><br><span class="line"></span><br><span class="line">    SINK template: &apos;sink_%u&apos;</span><br><span class="line">        Availability: On request</span><br><span class="line">        Has request_new_pad() function: gst_nvstreammux_request_new_pad</span><br><span class="line">        Capabilities:</span><br><span class="line">        video/x-raw(memory:NVMM)</span><br><span class="line">                    format: &#123; NV12, RGBA &#125;</span><br><span class="line">                    width: [ 1, 2147483647 ]</span><br><span class="line">                    height: [ 1, 2147483647 ]</span><br><span class="line">                framerate: [ 0/1, 2147483647/1 ]</span><br><span class="line">        video/x-raw</span><br><span class="line">                    format: &#123; NV12, RGBA &#125;</span><br><span class="line">                    width: [ 1, 2147483647 ]</span><br><span class="line">                    height: [ 1, 2147483647 ]</span><br><span class="line">                framerate: [ 0/1, 2147483647/1 ]</span><br><span class="line"></span><br><span class="line">Element Properties:</span><br><span class="line">    batch-size          : Maximum number of buffers in a batch</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Unsigned Integer. Range: 0 - 1024 Default: 0 </span><br><span class="line">    batched-push-timeout: Timeout in microseconds to wait after the first buffer is available to push the batch even if the complete batch is not formed.</span><br><span class="line">                Set to -1 to wait infinitely</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Integer. Range: -1 - 2147483647 Default: -1 </span><br><span class="line">    width               : Width of each frame in output batched buffer. This property MUST be set.</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Unsigned Integer. Range: 0 - 4294967295 Default: 0 </span><br><span class="line">    height              : Height of each frame in output batched buffer. This property MUST be set.</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Unsigned Integer. Range: 0 - 4294967295 Default: 0 </span><br><span class="line">    enable-padding      : Maintain input aspect ratio when scaling by padding with black bands.</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Boolean. Default: false</span><br><span class="line">    gpu-id              : Set GPU Device ID</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Unsigned Integer. Range: 0 - 4294967295 Default: 0 </span><br><span class="line">    live-source         : Boolean property to inform muxer that sources are live.</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Boolean. Default: false</span><br><span class="line">    cuda-memory-type    : Type of CUDA Memory to be allocated for output buffers</span><br><span class="line">                            flags: readable, writable, changeable only in NULL or READY state</span><br><span class="line">                            Enum &quot;GstNvDsMemoryType&quot; Default: 1, &quot;cuda-device-mem&quot;</span><br><span class="line">                            (0): cuda-pinned-mem  - Host/Pinned memory allocated using cudaMallocHost</span><br><span class="line">                            (1): cuda-device-mem  - Device memory allocated using cudaMalloc</span><br><span class="line">                            (2): cuda-unified-mem - Unified memory allocated using cudaMallocManaged</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;nvosd<br>&emsp;&emsp;nvosd可以根据算法处理结果在原图上画框。  </p>
+<div align="center">
+<img src="https://s2.ax1x.com/2019/06/27/ZuiIRH.png" width="600/">
+</div>  
+
+<p>&emsp;&emsp;nvvidconv<br>&emsp;&emsp;nvvidconv能够实现图像格式转换。  </p>
+<div align="center">
+<img src="https://s2.ax1x.com/2019/06/27/ZuiHsI.png" width="600/">
+</div>  
+
+<h2 id="4-3-DeepStream数据分析"><a href="#4-3-DeepStream数据分析" class="headerlink" title="4.3 DeepStream数据分析"></a>4.3 DeepStream数据分析</h2><div align="center">
+<img src="https://s2.ax1x.com/2019/06/27/Zui4iD.png">
+</div>  
+
+<h2 id="4-4-DeepStream实例分析"><a href="#4-4-DeepStream实例分析" class="headerlink" title="4.4 DeepStream实例分析"></a>4.4 DeepStream实例分析</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ gst-launch-1.0 rtspsrc location=rtsp://admin:admin@192.168.18.248:554 ! rtph264depay ! h264parse ! nvdec_h264 ! nvvidconv ! x264enc ! nvdec_h264 ! nveglglessink</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;对比仅通过GStreamer实现的视频分析应用，DeepStream将NVIDIA自家的技术栈以插件的形式集成进GStreamer中，利用这些插件可以很好的利用其GPU的性能，提升应用的视频处理能力。  </p>
+<div align="center">
+<img src="https://s2.ax1x.com/2019/06/27/ZuiLeP.png" width="600/">
+</div>  
+
+<h2 id="4-5-DeepStream插件介绍"><a href="#4-5-DeepStream插件介绍" class="headerlink" title="4.5 DeepStream插件介绍"></a>4.5 DeepStream插件介绍</h2><p>&emsp;&emsp;DeepStream插件开发方式与GStreamer类似，无非添加一些NVIDIA本身的东西，整体开发思路类似。DeepStream插件开发可参考gst-dsexample示例程序。<br>&emsp;&emsp;gst-dsexample基于GStreamer开发，继承至GstBaseTransform类。gst-dsexample中共包含四个文件：gstdsexample.h，gstdsexample.cpp，dsexample_lib.h，dsexample_lib.c。<br>&emsp;&emsp;gstdsexample主要实现插件的初始化，插件的注册等功能。<br>&emsp;&emsp;dsexample_lib主要负责插件具体功能的实现，如目标检测与目标分类。<br>&emsp;&emsp;每个插件均可单独配置不同的参数，用于对插件功能进行设置，如配置处理图像的宽和高、使用GPU的ID等。<br>&emsp;&emsp;插件按数据流处理方式可分为直通式与非直通式。<br>&emsp;&emsp;直通模式下，数据流直接通过插件，插件仅对流过的数据进行处理，并将处理后的结果附加在数据上传递给下游插件。如获取图像数据并通过算法进行目标检测，将目标检测结果附加在数据中，传递给下游组件，便于后续的分析。gst-dsexample就是直通式插件，获取图像数据并经过算法分析后，将分析结果附加在gst-buffer里，传递给下游组件。<br>&emsp;&emsp;非直通模式下，数据流被插件截取并处理后再传递给下游插件，传递给下游的数据流可能由本插件生成，而不再是原始数据。例如图像缩放插件，当图像被放大时，图像数据空间已经改变，必须由缩放插件自行开辟数据空间，并将放大后的图像数据传递给下游。<br>&emsp;&emsp;直通与非直通的区别，核心就在于数据流管理方式的不同。下面将对gst-dsexample的插件源码进行解析。<br>gstdsexample.h<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> __GST_DSEXAMPLE_H__</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __GST_DSEXAMPLE_H__</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;gst/base/gstbasetransform.h&gt;</span></span></span><br><span class="line">...</span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"dsexample_lib/dsexample_lib.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 插件描述信息，其中PACKAGE字段指定了插件的名称，通过该名称实现插件的调用。 */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PACKAGE <span class="meta-string">"dsexample"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> VERSION <span class="meta-string">"1.0"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> LICENSE <span class="meta-string">"Proprietary"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DESCRIPTION <span class="meta-string">"NVIDIA example plugin for integration with DeepStream on DGPU"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BINARY_PACKAGE <span class="meta-string">"NVIDIA DeepStream 3rdparty IP integration example plugin"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> URL <span class="meta-string">"http://nvidia.com/"</span></span></span><br><span class="line"></span><br><span class="line">G_BEGIN_DECLS</span><br><span class="line"><span class="comment">/* 固定结构，声明插件实例与插件类 */</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">GstDsExample</span> <span class="title">GstDsExample</span>;</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">GstDsExampleClass</span> <span class="title">GstDsExampleClass</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 固定结构 */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GST_TYPE_DSEXAMPLE (gst_dsexample_get_type())</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GST_DSEXAMPLE(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DSEXAMPLE,GstDsExample))</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GST_DSEXAMPLE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DSEXAMPLE,GstDsExampleClass))</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GST_DSEXAMPLE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_DSEXAMPLE, GstDsExampleClass))</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GST_IS_DSEXAMPLE(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DSEXAMPLE))</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GST_IS_DSEXAMPLE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DSEXAMPLE))</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GST_DSEXAMPLE_CAST(obj)  ((GstDsExample *)(obj))</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> _<span class="title">GstDsExample</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    GstBaseTransform base_trans;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 自定义算法实现</span></span><br><span class="line">    DsExampleCtx *dsexamplelib_ctx;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 自定义变量</span></span><br><span class="line">    guint unique_id;</span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> _<span class="title">GstDsExampleClass</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    GstBaseTransformClass parent_class;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function">GType <span class="title">gst_dsexample_get_type</span> <span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">G_END_DECLS</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">/* __GST_DSEXAMPLE_H__ */</span></span></span><br></pre></td></tr></table></figure></p>
+<p>_GstDsExample为类的实例对象，里面可以存放运行时所需的变量。_GstDsExampleClass则为类，主要定义成员函数。可以看出 _GstDsExampleClass 继承自 GstBaseTransformClass。程序所需的自定义函数或者变量可直接在 _GstDsExample 中添加，其余参数可视为固定模板，可不做修改。<br>gstdsexample.cpp<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"gstdsexample.h"</span></span></span><br><span class="line"></span><br><span class="line">GST_DEBUG_CATEGORY_STATIC (gst_dsexample_debug);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GST_CAT_DEFAULT gst_dsexample_debug</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> GQuark _dsmeta_quark = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 插件属性的枚举变量 */</span></span><br><span class="line"><span class="keyword">enum</span></span><br><span class="line">&#123;</span><br><span class="line">    PROP_0,</span><br><span class="line">    PROP_UNIQUE_ID</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 插件属性默认值 */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DEFAULT_UNIQUE_ID 15</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> RGB_BYTES_PER_PIXEL 3</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 设置插件sink和src端的连接方式与属性，这里设置数据存放于GPU中，所以内存指定为memory:NVMM */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GST_CAPS_FEATURE_MEMORY_NVMM <span class="meta-string">"memory:NVMM"</span></span></span><br><span class="line"><span class="keyword">static</span> GstStaticPadTemplate gst_dsexample_sink_template =</span><br><span class="line">GST_STATIC_PAD_TEMPLATE (<span class="string">"sink"</span>,</span><br><span class="line">    GST_PAD_SINK,</span><br><span class="line">    GST_PAD_ALWAYS,</span><br><span class="line">    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES</span><br><span class="line">        (GST_CAPS_FEATURE_MEMORY_NVMM,</span><br><span class="line">            <span class="string">"&#123; NV12, RGBA &#125;"</span>)));</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> GstStaticPadTemplate gst_dsexample_src_template =</span><br><span class="line">GST_STATIC_PAD_TEMPLATE (<span class="string">"src"</span>,</span><br><span class="line">    GST_PAD_SRC,</span><br><span class="line">    GST_PAD_ALWAYS,</span><br><span class="line">    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES</span><br><span class="line">        (GST_CAPS_FEATURE_MEMORY_NVMM,</span><br><span class="line">            <span class="string">"&#123; NV12, RGBA &#125;"</span>)));</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Define our element type. Standard GObject/GStreamer boilerplate stuff */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> gst_dsexample_parent_class parent_class</span></span><br><span class="line">G_DEFINE_TYPE (GstDsExample, gst_dsexample, GST_TYPE_BASE_TRANSFORM);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* </span></span><br><span class="line"><span class="comment">* 插件的配置函数，配置子类的实现、插件属性、插件描述信息等。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">gst_dsexample_class_init (GstDsExampleClass * klass)</span><br><span class="line">&#123;</span><br><span class="line">    GObjectClass *gobject_class;</span><br><span class="line">    GstElementClass *gstelement_class;</span><br><span class="line">    GstBaseTransformClass *gstbasetransform_class;</span><br><span class="line"></span><br><span class="line">    gobject_class = (GObjectClass *) klass;</span><br><span class="line">    gstelement_class = (GstElementClass *) klass;</span><br><span class="line">    gstbasetransform_class = (GstBaseTransformClass *) klass;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 重构类的实现函数 */</span></span><br><span class="line">    gobject_class-&gt;set_property = GST_DEBUG_FUNCPTR (gst_dsexample_set_property);</span><br><span class="line">    gobject_class-&gt;get_property = GST_DEBUG_FUNCPTR (gst_dsexample_get_property);</span><br><span class="line"></span><br><span class="line">    gstbasetransform_class-&gt;set_caps = GST_DEBUG_FUNCPTR (gst_dsexample_set_caps);</span><br><span class="line">    gstbasetransform_class-&gt;start = GST_DEBUG_FUNCPTR (gst_dsexample_start);</span><br><span class="line">    gstbasetransform_class-&gt;stop = GST_DEBUG_FUNCPTR (gst_dsexample_stop);</span><br><span class="line">    <span class="comment">// 默认是直通模式下，所以子类重构的是transform_ip函数。</span></span><br><span class="line">    gstbasetransform_class-&gt;transform_ip =</span><br><span class="line">        GST_DEBUG_FUNCPTR (gst_dsexample_transform_ip);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 注册插件属性 */</span></span><br><span class="line">    g_object_class_install_property (gobject_class, PROP_UNIQUE_ID,</span><br><span class="line">        g_param_spec_uint (<span class="string">"unique-id"</span>,</span><br><span class="line">            <span class="string">"Unique ID"</span>,</span><br><span class="line">            <span class="string">"Unique ID for the element. Can be used to identify output of the"</span></span><br><span class="line">            <span class="string">" element"</span>, <span class="number">0</span>, G_MAXUINT, DEFAULT_UNIQUE_ID, (GParamFlags)</span><br><span class="line">            (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 设置sink和src的pad capabilities属性 */</span></span><br><span class="line">    gst_element_class_add_pad_template (gstelement_class,</span><br><span class="line">        gst_static_pad_template_get (&amp;gst_dsexample_src_template));</span><br><span class="line">    gst_element_class_add_pad_template (gstelement_class,</span><br><span class="line">        gst_static_pad_template_get (&amp;gst_dsexample_sink_template));</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 设置插件描述信息 */</span></span><br><span class="line">    gst_element_class_set_details_simple (gstelement_class,</span><br><span class="line">        <span class="string">"DsExample plugin"</span>,</span><br><span class="line">        <span class="string">"DsExample Plugin"</span>,</span><br><span class="line">        <span class="string">"Process a 3rdparty example algorithm on objects / full frame"</span>,</span><br><span class="line">        <span class="string">"NVIDIA Corporation. Post on Deepstream for Tesla forum for any queries "</span></span><br><span class="line">        <span class="string">"@ https://devtalk.nvidia.com/default/board/209/"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">gst_dsexample_init (GstDsExample * dsexample)</span><br><span class="line">&#123;</span><br><span class="line">    GstBaseTransform *btrans = GST_BASE_TRANSFORM (dsexample);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 设置是否基于同一内存空间处理buffer，在直通模式下，inbuf和outbuf是同一内存空间的。 */</span></span><br><span class="line">    gst_base_transform_set_in_place (GST_BASE_TRANSFORM (btrans), TRUE);</span><br><span class="line">    <span class="comment">/* 设置是否是直通模式，直通模式下调用的是transform_ip函数，非直通模式下调用transform */</span></span><br><span class="line">    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (btrans), TRUE);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 设置插件属性默认值 */</span></span><br><span class="line">    dsexample-&gt;unique_id = DEFAULT_UNIQUE_ID;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* This quark is required to identify NvDsMeta when iterating through</span></span><br><span class="line"><span class="comment">    * the buffer metadatas */</span></span><br><span class="line">    <span class="keyword">if</span> (!_dsmeta_quark)</span><br><span class="line">        _dsmeta_quark = g_quark_from_static_string (NVDS_META_STRING);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* </span></span><br><span class="line"><span class="comment">* 设置插件属性信息</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">gst_dsexample_set_property (GObject * object, guint prop_id,</span><br><span class="line">    <span class="keyword">const</span> GValue * value, GParamSpec * pspec)</span><br><span class="line">&#123;</span><br><span class="line">    GstDsExample *dsexample = GST_DSEXAMPLE (object);</span><br><span class="line">    <span class="keyword">switch</span> (prop_id) &#123;</span><br><span class="line">        <span class="keyword">case</span> PROP_UNIQUE_ID:</span><br><span class="line">            dsexample-&gt;unique_id = g_value_get_uint (value);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* </span></span><br><span class="line"><span class="comment">* 获取插件属性信息</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">gst_dsexample_get_property (GObject * object, guint prop_id,</span><br><span class="line">    GValue * value, GParamSpec * pspec)</span><br><span class="line">&#123;</span><br><span class="line">    GstDsExample *dsexample = GST_DSEXAMPLE (object);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> (prop_id) &#123;</span><br><span class="line">        <span class="keyword">case</span> PROP_UNIQUE_ID:</span><br><span class="line">        g_value_set_uint (value, dsexample-&gt;unique_id);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 初始化资源，如算法初始化。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">static</span> gboolean</span><br><span class="line">gst_dsexample_start (GstBaseTransform * btrans)</span><br><span class="line">&#123;</span><br><span class="line">    GstDsExample *dsexample = GST_DSEXAMPLE (btrans);</span><br><span class="line">    DsExampleInitParams init_params =</span><br><span class="line">        &#123; dsexample-&gt;processing_width, dsexample-&gt;processing_height,</span><br><span class="line">        dsexample-&gt;process_full_frame</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Algorithm specific initializations and resource allocation. */</span></span><br><span class="line">    dsexample-&gt;dsexamplelib_ctx = DsExampleCtxInit (&amp;init_params);</span><br><span class="line"></span><br><span class="line">    GST_DEBUG_OBJECT (dsexample, <span class="string">"ctx lib %p \n"</span>, dsexample-&gt;dsexamplelib_ctx);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> TRUE;</span><br><span class="line">    error:</span><br><span class="line">    <span class="keyword">if</span> (dsexample-&gt;dsexamplelib_ctx)</span><br><span class="line">        DsExampleCtxDeinit (dsexample-&gt;dsexamplelib_ctx);</span><br><span class="line">    <span class="keyword">return</span> FALSE;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 释放资源。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">static</span> gboolean</span><br><span class="line">gst_dsexample_stop (GstBaseTransform * btrans)</span><br><span class="line">&#123;</span><br><span class="line">    GstDsExample *dsexample = GST_DSEXAMPLE (btrans);</span><br><span class="line">    <span class="comment">// 释放算法内存空间</span></span><br><span class="line">    DsExampleCtxDeinit (dsexample-&gt;dsexamplelib_ctx);</span><br><span class="line">    dsexample-&gt;dsexamplelib_ctx = <span class="literal">NULL</span>;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> TRUE;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 获取协商好的caps参数，并进行相应的处理。如获取输入图像的宽高等信息。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">static</span> gboolean</span><br><span class="line">gst_dsexample_set_caps (GstBaseTransform * btrans, GstCaps * incaps,</span><br><span class="line">    GstCaps * outcaps)</span><br><span class="line">&#123;</span><br><span class="line">    GstDsExample *dsexample = GST_DSEXAMPLE (btrans);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> TRUE;</span><br><span class="line">    error:</span><br><span class="line">    <span class="keyword">return</span> FALSE;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* 直通模式下，获取上游数据并进行算法处理后，将检测后的结果叠加在GstBuffer里面传递给下游。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">static</span> GstFlowReturn</span><br><span class="line">gst_dsexample_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)</span><br><span class="line">&#123;</span><br><span class="line">    GstDsExample *dsexample = GST_DSEXAMPLE (btrans);</span><br><span class="line">    GstMapInfo in_map_info;</span><br><span class="line">    GstFlowReturn flow_ret = GST_FLOW_ERROR;</span><br><span class="line">    gdouble scale_ratio;</span><br><span class="line">    DsExampleOutput *output;</span><br><span class="line"></span><br><span class="line">    NvBufSurface *surface = <span class="literal">NULL</span>;</span><br><span class="line">    GstNvStreamMeta *streamMeta = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">memset</span> (&amp;in_map_info, <span class="number">0</span>, <span class="keyword">sizeof</span> (in_map_info));</span><br><span class="line">    <span class="keyword">if</span> (!gst_buffer_map (inbuf, &amp;in_map_info, GST_MAP_READ)) &#123;</span><br><span class="line">        g_print (<span class="string">"Error: Failed to map gst buffer\n"</span>);</span><br><span class="line">        <span class="keyword">goto</span> error;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    surface = (NvBufSurface *) in_map_info.data;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 从inbuf里面获取nvidia的streamMeta数据结构 */</span></span><br><span class="line">    streamMeta = gst_buffer_get_nvstream_meta (inbuf);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 对一级检测来说，处理的是整张图片，对二级分类来说，处理的是目标小图 */</span></span><br><span class="line">    <span class="keyword">if</span> (dsexample-&gt;process_full_frame) &#123;</span><br><span class="line">        <span class="keyword">for</span> (guint i = <span class="number">0</span>; i &lt; batch_size; i++) &#123;</span><br><span class="line">            NvOSD_RectParams rect_params;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 定义缩放图像的大小</span></span><br><span class="line">            rect_params.left = <span class="number">0</span>;</span><br><span class="line">            rect_params.top = <span class="number">0</span>;</span><br><span class="line">            rect_params.width = dsexample-&gt;video_info.width;</span><br><span class="line">            rect_params.height = dsexample-&gt;video_info.height;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 对图像数据进行尺度缩放与空间转换等预处理操作</span></span><br><span class="line">            <span class="keyword">if</span> (get_converted_mat_dgpu (dsexample, surface-&gt;buf_data[i], &amp;rect_params,</span><br><span class="line">                    scale_ratio, dsexample-&gt;video_info.width,</span><br><span class="line">                    dsexample-&gt;video_info.height) != GST_FLOW_OK) &#123;</span><br><span class="line">                <span class="keyword">goto</span> error;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 运行检测算法，获取检测结果。</span></span><br><span class="line">            output =</span><br><span class="line">                DsExampleProcess (dsexample-&gt;dsexamplelib_ctx,</span><br><span class="line">                dsexample-&gt;cvmat-&gt;data);</span><br><span class="line">            <span class="comment">// 将检测结果叠加在inbuf里面传递给下游组件。</span></span><br><span class="line">            attach_metadata_full_frame (dsexample, inbuf, scale_ratio, output, i);</span><br><span class="line">            <span class="built_in">free</span> (output);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">/* 针对二级分类进行处理 */</span></span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    flow_ret = GST_FLOW_OK;</span><br><span class="line">    error:</span><br><span class="line">    gst_buffer_unmap (inbuf, &amp;in_map_info);</span><br><span class="line">    <span class="keyword">return</span> flow_ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* 释放申请的内存空间。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">free_ds_meta (gpointer meta_data)</span><br><span class="line">&#123;</span><br><span class="line">    NvDsFrameMeta *params = (NvDsFrameMeta *) meta_data;</span><br><span class="line">    <span class="keyword">for</span> (guint i = <span class="number">0</span>; i &lt; params-&gt;num_rects; i++) &#123;</span><br><span class="line">        g_free (params-&gt;obj_params[i].text_params.display_text);</span><br><span class="line">    &#125;</span><br><span class="line">    g_free (params-&gt;obj_params);</span><br><span class="line">    g_free (params);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* 添加一级检测的结果，如目标位置框信息。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">attach_metadata_full_frame (GstDsExample * dsexample, GstBuffer * inbuf,</span><br><span class="line">    gdouble scale_ratio, DsExampleOutput * output, guint batch_id)</span><br><span class="line">&#123;</span><br><span class="line">    NvDsMeta *dsmeta;</span><br><span class="line">    NvDsFrameMeta *bbparams = (NvDsFrameMeta *) g_malloc0 (<span class="keyword">sizeof</span> (NvDsFrameMeta));</span><br><span class="line">    <span class="comment">// 根据检测到的目标数量申请对应的目标参数内存空间。</span></span><br><span class="line">    bbparams-&gt;obj_params =</span><br><span class="line">        (NvDsObjectParams *) g_malloc0 (<span class="keyword">sizeof</span> (NvDsObjectParams) *</span><br><span class="line">        output-&gt;numObjects);</span><br><span class="line">    GST_DEBUG_OBJECT (dsexample, <span class="string">"Attaching metadata %d\n"</span>, output-&gt;numObjects);</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 将NvDsFrameMeta以NvDsMeta的方式添加到buffer中。</span></span><br><span class="line">    dsmeta = gst_buffer_add_nvds_meta (inbuf, bbparams, free_ds_meta);</span><br><span class="line">    <span class="comment">// 指定NvDsMeta的数据内容为NVDS_META_FRAME_INFO。</span></span><br><span class="line">    dsmeta-&gt;meta_type = NVDS_META_FRAME_INFO;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* 添加二级分类的结果。</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">attach_metadata_object (GstDsExample * dsexample, NvDsObjectParams * obj_param,</span><br><span class="line">    DsExampleOutput * output)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* 用于向GStreamer注册插件</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">static</span> gboolean</span><br><span class="line">dsexample_plugin_init (GstPlugin * plugin)</span><br><span class="line">&#123;</span><br><span class="line">    GST_DEBUG_CATEGORY_INIT (gst_dsexample_debug, <span class="string">"dsexample"</span>, <span class="number">0</span>,</span><br><span class="line">        <span class="string">"dsexample plugin"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> gst_element_register (plugin, <span class="string">"dsexample"</span>, GST_RANK_PRIMARY,</span><br><span class="line">        GST_TYPE_DSEXAMPLE);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,</span><br><span class="line">    GST_VERSION_MINOR,</span><br><span class="line">    dsexample,</span><br><span class="line">    DESCRIPTION, dsexample_plugin_init, <span class="string">"3.0"</span>, LICENSE, BINARY_PACKAGE, URL)</span><br></pre></td></tr></table></figure></p>
+<p>&emsp;&emsp;这里仅作简单注释，为了减少篇幅也对源码进行了裁剪，详细源码参考官方。该文件可理解为插件的接口实现函数，可以对插件进行定制化开发，配置算法所需的参数文件、实现算法的初始化、配置插件属性、进行插件注册等工作。<br>&emsp;&emsp;这里插件的名字指定为dsexample，当然也可以根据自己的需求修改插件名字，官方有提供一些工具进行修改，我这里的话之间简单的将插件名字进行替换(对整个插件源代码进行替换)，也满足要求。<br>&emsp;&emsp;关于部署。插件编译成功部署的时候，仅需要把生成的.so文件放在 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/ 目录下。通过 make install 命令也可以实现同样的效果。<br>&emsp;&emsp;dsexample_lib相关文件为算法的具体实现文件，分为算法的初始化与算法的实现两部分，比较简单，本文不做过多阐述。  </p>
+<p>人体姿态估计算法插件<br>&emsp;&emsp;在实践过程中，以之前的人体姿态估计算法相关工作为切入点，完成了基于gst-dsexample的人体姿态估计算法插件开发。总体设计思想基于上文所述，配置了相关接口，将人体姿态估计算法嵌入插件中，实现功能。通过 gst-inspect-1.0 dspose 命令运行后的插件描述结果。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line">Factory Details:</span><br><span class="line">    Rank                     primary (256)</span><br><span class="line">    Long-name                DsPose plugin</span><br><span class="line">    Klass                    DsPose Plugin</span><br><span class="line">    Description              Process a PoseEstimation algorithm on full frame</span><br><span class="line">    Author                   xiaochengliu.prc@foxmail.com</span><br><span class="line"></span><br><span class="line">Plugin Details:</span><br><span class="line">    Name                     nvdspose</span><br><span class="line">    Description              pose plugin <span class="keyword">for</span> integration with DeepStream on DGPU</span><br><span class="line">    Filename                 /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstnvdspose.so</span><br><span class="line">    Version                  3.0</span><br><span class="line">    License                  Proprietary</span><br><span class="line">    Source module            dspose</span><br><span class="line">    Binary package           NVIDIA DeepStream 3rdparty IP integration pose plugin</span><br><span class="line">    Origin URL               xiaochengliu.prc@foxmail.com</span><br><span class="line"></span><br><span class="line">GObject</span><br><span class="line">+----GInitiallyUnowned</span><br><span class="line">    +----GstObject</span><br><span class="line">            +----GstElement</span><br><span class="line">                +----GstBaseTransform</span><br><span class="line">                        +----GstDsPose</span><br><span class="line"></span><br><span class="line">Pad Templates:</span><br><span class="line">SRC template: <span class="string">'src'</span></span><br><span class="line">    Availability: Always</span><br><span class="line">    Capabilities:</span><br><span class="line">    video/x-raw(memory:NVMM)</span><br><span class="line">                format: &#123; NV12, RGBA &#125;</span><br><span class="line">                width: [ 1, 2147483647 ]</span><br><span class="line">                height: [ 1, 2147483647 ]</span><br><span class="line">            framerate: [ 0/1, 2147483647/1 ]</span><br><span class="line"></span><br><span class="line">SINK template: <span class="string">'sink'</span></span><br><span class="line">    Availability: Always</span><br><span class="line">    Capabilities:</span><br><span class="line">    video/x-raw(memory:NVMM)</span><br><span class="line">                format: &#123; NV12, RGBA &#125;</span><br><span class="line">                width: [ 1, 2147483647 ]</span><br><span class="line">                height: [ 1, 2147483647 ]</span><br><span class="line">            framerate: [ 0/1, 2147483647/1 ]</span><br><span class="line"></span><br><span class="line">Element Properties:</span><br><span class="line">    unique-id           : Unique ID <span class="keyword">for</span> the element. </span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Unsigned Integer. Range: 0 - 4294967295 Default: 15 </span><br><span class="line">    processing-width    : Width of the input buffer to algorithm</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Integer. Range: 1 - 2147483647 Default: 1920 </span><br><span class="line">    processing-height   : Height of the input buffer to algorithm</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Integer. Range: 1 - 2147483647 Default: 1080 </span><br><span class="line">    gpu-id              : Set GPU Device ID</span><br><span class="line">                            flags: readable, writable, changeable only <span class="keyword">in</span> NULL or READY state</span><br><span class="line">                            Unsigned Integer. Range: 0 - 4294967295 Default: 0 </span><br><span class="line">    model-file          : Set model file location</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            String. Default: null</span><br><span class="line">    net-input-width     : Set Net input width</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Integer. Range: -1 - 2147483647 Default: -1 </span><br><span class="line">    net-input-height    : Set Net input height</span><br><span class="line">                            flags: readable, writable</span><br><span class="line">                            Integer. Range: -1 - 2147483647 Default: 368</span><br></pre></td></tr></table></figure></p>
+<h1 id="5-应用：视频综合平台"><a href="#5-应用：视频综合平台" class="headerlink" title="5. 应用：视频综合平台"></a>5. 应用：视频综合平台</h1><h2 id="5-1-DeepStream-智能停车场案例分析"><a href="#5-1-DeepStream-智能停车场案例分析" class="headerlink" title="5.1 DeepStream 智能停车场案例分析"></a>5.1 DeepStream 智能停车场案例分析</h2><p>详见NVIDIA官网：<br><a href="https://github.com/NVIDIA-AI-IOT/deepstream_360_d_smart_parking_application" target="_blank" rel="noopener">https://github.com/NVIDIA-AI-IOT/deepstream_360_d_smart_parking_application</a>  </p>
+<h2 id="5-2-去插件化视频流网页预览"><a href="#5-2-去插件化视频流网页预览" class="headerlink" title="5.2 去插件化视频流网页预览"></a>5.2 去插件化视频流网页预览</h2><p>参见之前的一篇文章《网页播放视频流的去插件化实现》：<br><a href="http://orangeamoy.com/2019/04/02/VideoIntegratedPlatform/">http://orangeamoy.com/2019/04/02/VideoIntegratedPlatform/</a></p>
+<h1 id="6-参考链接："><a href="#6-参考链接：" class="headerlink" title="6. 参考链接："></a>6. 参考链接：</h1><p><a href="https://blog.csdn.net/u011337602/article/details/81485246" target="_blank" rel="noopener">https://blog.csdn.net/u011337602/article/details/81485246</a><br><a href="https://www.cnblogs.com/xleng/p/10948838.html" target="_blank" rel="noopener">https://www.cnblogs.com/xleng/p/10948838.html</a>  </p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/12/DeepStream/" rel="next" title="NVIDIA DeepStream 简介">
+                <i class="fa fa-chevron-left"></i> NVIDIA DeepStream 简介
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="Orange">
+            
+              <p class="site-author-name" itemprop="name">Orange</p>
+              <p class="site-description motion-element" itemprop="description">小白程序员的成长之旅</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/OrangeAmoy" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-写在前面"><span class="nav-text">1. 写在前面</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-前言：如何构建视频分析应用"><span class="nav-text">2. 前言：如何构建视频分析应用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-基础：GStreamer"><span class="nav-text">3. 基础：GStreamer</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-GStreamer简介与框架"><span class="nav-text">3.1 GStreamer简介与框架</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-GStreamer基础概念"><span class="nav-text">3.2 GStreamer基础概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-1-Element"><span class="nav-text">3.2.1 Element</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-2-Pad"><span class="nav-text">3.2.2 Pad</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-3-Bin和Pipeline"><span class="nav-text">3.2.3 Bin和Pipeline</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-4-Plugins"><span class="nav-text">3.2.4 Plugins</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-GStreamer数据消息交互"><span class="nav-text">3.3 GStreamer数据消息交互</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-1-Bus"><span class="nav-text">3.3.1 Bus</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-2-Buffers"><span class="nav-text">3.3.2 Buffers</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-3-Events"><span class="nav-text">3.3.3 Events</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-4-Messages"><span class="nav-text">3.3.4 Messages</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-5-Queries"><span class="nav-text">3.3.5 Queries</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-GStreamer实例分析"><span class="nav-text">3.4 GStreamer实例分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-进阶：DeepStream"><span class="nav-text">4. 进阶：DeepStream</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-DeepStream简介与框架"><span class="nav-text">4.1 DeepStream简介与框架</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-DeepStream组件分析"><span class="nav-text">4.2 DeepStream组件分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-DeepStream数据分析"><span class="nav-text">4.3 DeepStream数据分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-DeepStream实例分析"><span class="nav-text">4.4 DeepStream实例分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-DeepStream插件介绍"><span class="nav-text">4.5 DeepStream插件介绍</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-应用：视频综合平台"><span class="nav-text">5. 应用：视频综合平台</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-DeepStream-智能停车场案例分析"><span class="nav-text">5.1 DeepStream 智能停车场案例分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-去插件化视频流网页预览"><span class="nav-text">5.2 去插件化视频流网页预览</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-参考链接："><span class="nav-text">6. 参考链接：</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      本站访客数
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      人次
+    </span>
+  
+
+  
+    <span class="site-pv">
+      本站总访问量
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      次
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("Hi9Me1ymYxpbQMv0ODXRUTw0-gzGzoHsz", "CMSESb0qQn5gGNtHhz8cWJT1");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+</body>
+</html>
