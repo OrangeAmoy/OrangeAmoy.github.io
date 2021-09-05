@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="1. 算法简介&amp;emsp;&amp;emsp;首先目标跟踪大致可分为单目标跟踪与多目标跟踪，本文重点描述单目标跟踪。目标跟踪解决的问题是：第一帧给出目标矩形框，然后从后续帧开始目标跟踪算法能够跟踪该目标矩形框。通常来说，目标跟踪有几大难点：外观变形，光照变化，快速运动和运动模糊，背景相似干扰：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="目标跟踪KCF算法简介与优化">
+<meta property="og:url" content="http://orangeamoy.com/2019/04/05/ObjectTracking/index.html">
+<meta property="og:site_name" content="橙色空间">
+<meta property="og:description" content="1. 算法简介&amp;emsp;&amp;emsp;首先目标跟踪大致可分为单目标跟踪与多目标跟踪，本文重点描述单目标跟踪。目标跟踪解决的问题是：第一帧给出目标矩形框，然后从后续帧开始目标跟踪算法能够跟踪该目标矩形框。通常来说，目标跟踪有几大难点：外观变形，光照变化，快速运动和运动模糊，背景相似干扰：">
+<meta property="og:locale">
+<meta property="article:published_time" content="2019-04-05T10:00:00.000Z">
+<meta property="article:modified_time" content="2021-09-05T11:19:00.984Z">
+<meta property="article:author" content="Orange">
+<meta property="article:tag" content="人工智能、计算机视觉、程序员">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://orangeamoy.com/2019/04/05/ObjectTracking/"/>
+
+
+
+
+
+  <title>目标跟踪KCF算法简介与优化 | 橙色空间</title>
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?bcd436e3a081d5895b3cf9ec2dd0003e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">橙色空间</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">橙子的个人博客</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://orangeamoy.com/2019/04/05/ObjectTracking/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="橙色空间">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">目标跟踪KCF算法简介与优化</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-05T18:00:00+08:00">
+                2019-04-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/" itemprop="url" rel="index">
+                    <span itemprop="name">技术文档</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index">
+                    <span itemprop="name">机器学习</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2019/04/05/ObjectTracking/" class="leancloud_visitors" data-flag-title="目标跟踪KCF算法简介与优化">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="1-算法简介"><a href="#1-算法简介" class="headerlink" title="1. 算法简介"></a>1. 算法简介</h1><p>&emsp;&emsp;首先目标跟踪大致可分为单目标跟踪与多目标跟踪，本文重点描述单目标跟踪。目标跟踪解决的问题是：第一帧给出目标矩形框，然后从后续帧开始目标跟踪算法能够跟踪该目标矩形框。通常来说，目标跟踪有几大难点：外观变形，光照变化，快速运动和运动模糊，背景相似干扰：  </p>
+<div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARj13t.png width=500/>
+</div>  
+
+<span id="more"></span>
+<p>平面外旋转，平面内旋转，尺度变化，遮挡和出视野等情况：</p>
+<div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARXLpq.png width=500/>
+</div>  
+
+<p>&emsp;&emsp;对于目标跟踪方法的分类，大致可分为生成模型方法和判别模型方法，目前比较流行的是判别类方法。生成类方法为在当前帧对目标区域建模，下一帧寻找与模型最相似的区域就是预测位置，例如：卡尔曼滤波，粒子滤波，mean-shift等。判别类算法的经典套路为图像特征+机器学习，当前帧以目标区域为正样本，背景区域为负样本，机器学习训练分类器，下一帧用训练好的分类器找最优区域，例如：Struck，TLD等。与生成类方法最大的区别，是分类器训练过程中用到了背景信息，这样分类器专注区分前景和背景，判别类方法普遍都比生成类好。判别类方法的最新发展就是相关滤波类方法和深度学习类方法。相关滤波方法例如：DCF，KCF，ECO等。深度学习方法例如：MDNet，TCNN，SiamFC等<br>&emsp;&emsp;参考资料：<br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/26415747">大话目标跟踪—背景介绍</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://github.com/foolwood/benchmark_results">benchmark_results</a></p>
+<h1 id="2-算法案例"><a href="#2-算法案例" class="headerlink" title="2. 算法案例"></a>2. 算法案例</h1><h2 id="2-1-背景介绍"><a href="#2-1-背景介绍" class="headerlink" title="2.1 背景介绍"></a>2.1 背景介绍</h2><p>&emsp;&emsp;2017年的时候，由于项目需求，需要研究一款在速度与性能均有较好表现的单目标跟踪算法，在当时通过多种算法选型，最终选择了KCF作为主要研究对象，现主要对相关滤波算法KCF进行简单介绍。<br>&emsp;&emsp;KCF是一种判别式跟踪方法，这类方法一般都是在跟踪的过程中训练一个目标检测器，使用目标检测器去检测下一帧预测位置是否是目标，然后再使用新检测结果去更新训练集进而更新目标检测器。而在训练目标检测器时一般选取目标区域为正样本，目标周围区域为负样本。<br>&emsp;&emsp;KCF的主要贡献可概括为：  </p>
+<ul>
+<li>使用目标周围区域的循环矩阵采集正负样本，利用岭回归训练目标检测器，并成功的利用循环矩阵在傅里叶空间可对角化的性质将矩阵的运算转化为向量的Hadamad积，即元素的点乘，大大降低了运算量，提高了运算速度，使算法满足实时性要求。  </li>
+<li>将线性空间的岭回归通过核函数映射到非线性空间，在非线性空间通过求解一个对偶问题和某些常见的约束，同样的可以使用循环矩阵傅里叶空间对角化简化计算。</li>
+<li>给出了一种将多通道数据融入该算法的途径。</li>
+</ul>
+<h2 id="2-2-公式推导"><a href="#2-2-公式推导" class="headerlink" title="2.2 公式推导"></a>2.2 公式推导</h2><h3 id="2-2-1-一维岭回归"><a href="#2-2-1-一维岭回归" class="headerlink" title="2.2.1 一维岭回归"></a>2.2.1 一维岭回归</h3><h4 id="2-2-1-1-岭回归"><a href="#2-2-1-1-岭回归" class="headerlink" title="2.2.1.1 岭回归"></a>2.2.1.1 岭回归</h4><p>&emsp;&emsp;设训练样本集$(x_i,y_i)$，那么其线性回归函数$f(x_i)=w^Tx_i$，$w$是列向量表示权重系数，可通过最小二乘法求解  </p>
+<script type="math/tex; mode=display">\min_w\sum_i(f(x_i)-y_i)^2+\lambda\Vert w\Vert^2</script><p>&emsp;&emsp;其中$\lambda$用于控制系统的结构复杂性，保证分类器的泛化性能。<br>&emsp;&emsp;写成矩阵的形式  </p>
+<script type="math/tex; mode=display">\min_w\Vert Xw-y\Vert^2+\lambda\Vert w\Vert^2</script><p>&emsp;&emsp;其中$X=[x_1,x_2,\cdots,x_n]^T$的每一行表示一个向量，$y$是列向量，每个元素对应一个样本的标签，于是令导数为0，可求得  </p>
+<script type="math/tex; mode=display">w=(X^TX+\lambda I)^{-1}X^Ty</script><p>&emsp;&emsp;写成复数域中形式  </p>
+<script type="math/tex; mode=display">w=(X^HX+\lambda I)^{-1}X^Hy</script><p>&emsp;&emsp;其中$X^H$表示复共轭转置矩阵，$X^H=(x^*)^T$。  </p>
+<h4 id="2-2-1-2-循环矩阵"><a href="#2-2-1-2-循环矩阵" class="headerlink" title="2.2.1.2 循环矩阵"></a>2.2.1.2 循环矩阵</h4><p>&emsp;&emsp;KCF中所有的训练样本是由目标样本循环位移得到的，向量的循环可由排列矩阵得到，比如  </p>
+<script type="math/tex; mode=display">x=[x_1,x_2,\cdots,x_n]^T</script><script type="math/tex; mode=display">P=
+    \left[
+    \begin{matrix}
+    0 & 0 & \cdots & 0 & 1 \\
+    1 & 0 & \cdots & 0 & 0 \\
+    0 & 1 & \cdots & 0 & 0 \\
+    \vdots & \vdots  & \ddots & \vdots & \vdots \\
+    0 & 0 & \cdots & 1 & 0 
+    \end{matrix} 
+    \right]</script><script type="math/tex; mode=display">Px=[x_n,x_1,x_2,\cdots,x_{n-1}]^T</script><p>&emsp;&emsp;对于二维图像的话，可以通过$x$轴和$y$轴分别循环移动实现不同位置的移动。<br>&emsp;&emsp;所以由一个向量$x\in \Re^n$可以通过不断的乘上排列矩阵得到$n$个循环移位向量,将这$n$个向量依序排列到一个矩阵中，就形成了$x$生成的循环矩阵，表示成$C(x)$  </p>
+<div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARX5nS.png width=400/>
+</div>
+<div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARXI0g.png width=400/>
+</div>  
+
+<h4 id="2-2-1-3-循环矩阵傅氏空间对角化"><a href="#2-2-1-3-循环矩阵傅氏空间对角化" class="headerlink" title="2.2.1.3 循环矩阵傅氏空间对角化"></a>2.2.1.3 循环矩阵傅氏空间对角化</h4><p>&emsp;&emsp;所有的循环矩阵都能够在傅氏空间中使用离散傅里叶矩阵进行对角化  </p>
+<script type="math/tex; mode=display">X=Fdiag(\hat{x})F^H</script><p>&emsp;&emsp;其中$\hat{x}$对应于生成$X$的向量$x$(就是$X$的第一行矩阵)的傅里叶变化后的值，$\hat{x}=\mathscr{F}(x)=\sqrt nFx$，$F$是离散傅里叶矩阵，是常量  </p>
+<script type="math/tex; mode=display">F=\frac{1}{\sqrt{n}}
+\left[
+\begin{matrix}
+1 & 1 & \cdots & 1 & 1 \\
+1 & w & \cdots & w^{n-2} & w^{n-1} \\
+1 & w^2 & \cdots & w^{2(n-2)} & w^{2(n-1)} \\
+\vdots & \vdots & \ddots & \vdots & \vdots \\
+1 & w^{n-1} & \cdots & w^{(n-1)(n-2)} & w^{(n-1)^2} 
+\end{matrix}
+\right]</script><p>&emsp;&emsp;关于矩阵的傅里叶对角化可参考<a target="_blank" rel="noopener" href="https://blog.csdn.net/shenxiaolu1984/article/details/50884830">循环矩阵傅里叶对角化</a>。  </p>
+<h4 id="2-2-1-4-傅氏对角化简化的岭回归"><a href="#2-2-1-4-傅氏对角化简化的岭回归" class="headerlink" title="2.2.1.4 傅氏对角化简化的岭回归"></a>2.2.1.4 傅氏对角化简化的岭回归</h4><p>&emsp;&emsp;将$X=Fdiag(\hat{x})F^H$带入岭回归公式得到  </p>
+<script type="math/tex; mode=display">\begin{aligned}
+w & = (Fdiag(\hat{x}^*)F^HFdiag(\hat{x})F^H+\lambda F^H)^{-1}Fdiag(\hat{x}^*)F^Hy \\
+    & = (Fdiag(\hat{x}^*\odot\hat{x}+\lambda)F^H)^{-1}Fdiag(\hat{x}^*)F^Hy \\
+    & = Fdiag(\frac{\hat{x}^*}{\hat{x}^*\odot\hat{x}+\lambda})F^Hy
+\end{aligned}</script><p>&emsp;&emsp;注意这里的分号是点除运算，就是对应元素相除。因为$\mathscr{F}(C(x)y)=\mathscr{F}^*(x)\odot\mathscr{F}(y)$，(循环矩阵傅里叶对角化)对上式两边同时傅氏变换得  </p>
+<script type="math/tex; mode=display">\mathscr{F}(w)=\mathscr{F}^*(\mathscr{F}^{-1}(\frac{\hat{x}^*}{\hat{x}^*\odot\hat{x}+\lambda}))\odot \mathscr{F}(y)</script><p>&emsp;&emsp;于是</p>
+<script type="math/tex; mode=display">\hat{w}=\frac{\hat{x}\odot\hat{y}}{\hat{x}^*\odot\hat{x}+\lambda}</script><p>&emsp;&emsp;这样就可以使用向量的点积运算取代矩阵运算，特别是求逆运算，大大提高了计算速度。  </p>
+<script type="math/tex; mode=display">w=\mathscr{F}^{-1}(\hat{w})</script><h3 id="2-2-2-核空间的岭回归"><a href="#2-2-2-核空间的岭回归" class="headerlink" title="2.2.2 核空间的岭回归"></a>2.2.2 核空间的岭回归</h3><p>&emsp;&emsp;我们希望找到一个非线性映射函数$\phi(x)$列向量，使映射后的样本在新空间中线性可分，那么在新空间中就可以使用岭回归来寻找一个分类器$f(x_i)=w^T\phi(x_i)$，所以这时候得到的权重系数为  </p>
+<script type="math/tex; mode=display">w=\min_w\Vert \phi(X)w-y\Vert^2+\lambda\Vert w\Vert^2</script><p>&emsp;&emsp;$w$是$\phi(X)=[\phi(x_1),\phi(x_2),\cdots,\phi(x_n)]^T$行向量张成的空间中的一个向量，所以令$w=\sum_i\alpha_i\phi(x_i)$上式就变为  </p>
+<script type="math/tex; mode=display">\alpha=\min_\alpha \Vert \phi(X)\phi(X)^T\alpha-y\Vert^2+\lambda\Vert \phi(X)^T\alpha\Vert^2</script><p>&emsp;&emsp;该问题称为$w$的对偶问题。<br>&emsp;&emsp;令关于列向量$\alpha$导数为0，  </p>
+<script type="math/tex; mode=display">\begin{aligned}
+J(\alpha) & = \alpha^T\phi(X)\phi(X)^T\phi(X)\phi(X)^T\alpha-2y^T\phi(X)\phi(X)^T\alpha+C_{onstant}+\lambda\alpha^T\phi(X)\phi(X)^T\alpha \\
+\frac{\partial J}{\partial\alpha}  & = 2\phi(X)\phi(X)^T\phi(X)\phi(X)^T\alpha+2\lambda\phi(X)\phi(X)^T\alpha-2\phi(X)\phi(X)^Ty=0 \\
+\alpha^*  & = (\phi(X)\phi(X)^T+\lambda I)^{-1}y
+\end{aligned}</script><p>&emsp;&emsp;注：$\phi(X)\phi(X)^T$类似于核空间变量的协方差矩阵，矩阵的转置乘以矩阵，一定可逆。<br>&emsp;&emsp;对于核方法，我们一般不知道非线性映射函数$\phi(x)$的具体形式，而只是刻画在核空间的核矩阵$\phi(X)\phi(X)^T$，那么我们令$K$表示核空间的核矩阵，由核函数得到，那么$K=\phi(X)\phi(X)^T$，于是  </p>
+<script type="math/tex; mode=display">\alpha^*=(K+\lambda I)^{-1}y</script><script type="math/tex; mode=display">f(z)=w^T\phi(z)=\alpha^T\phi(X)\phi(z)</script><p>&emsp;&emsp;这里通过循环矩阵的傅氏对角化简化计算，所以如果希望计算$\alpha$时可以同样将矩阵求逆运算变为元素运算，就希望将$K$对角化，所以希望找到一个核函数使对应的核矩阵式循环矩阵。<br>定理1<br>&emsp;&emsp;即核矩阵是循环矩阵应该满足两个条件：第一个样本和第二个样本都是由生成样本循环移位产生的，可以不是由同一个样本生成；满足$K(x,x’)=K(Mx,Mx’)$，其中$M$是排列矩阵。<br>&emsp;&emsp;证明：<br>&emsp;&emsp;设$x\in \Re^n$，则$x’=P^ix,{\forall x’\in C(x)}$，于是  </p>
+<script type="math/tex; mode=display">\begin{aligned}
+K_{ij} & = \phi(x_i)^T\phi(x_j) \\
+       & = K(x_i,x_j) \\
+       & = K(P^ix,P^jx) \\
+       & = K(x,P^{j-i}x) \\
+       & = \phi(x)^T\phi(P^{j-i}x)
+\end{aligned}</script><p>&emsp;&emsp;因为$K$的第一行为$\phi(x)^T\phi(x<em>j),{ j=1,2,\cdots,n}$，所以$K</em>{ij}$相当于将第一行的第$j-i$个元素放到$K$的第$i$行$j$列上，那么$i,j\in { 1,2,\cdots,n}$就得到了循环矩阵，所以$K$是循环矩阵。证明$j-i$表示除$n$的余数，因为这个过程是循环的。  </p>
+<p>&emsp;&emsp;证毕。<br>&emsp;&emsp;若$K$是循环矩阵，则  </p>
+<script type="math/tex; mode=display">\alpha = Fdiag(\hat{K}^{xx}+\lambda)^{-1}F^Hy</script><script type="math/tex; mode=display">\hat{\alpha}=\frac{\hat{y}}{(\hat{K}^{xx}+\lambda)^*}</script><p>&emsp;&emsp;其中$K^{xx}=\phi(x)^T\phi(X)^T$是$K$中第一行。</p>
+<h3 id="2-2-3-快速检测"><a href="#2-2-3-快速检测" class="headerlink" title="2.2.3 快速检测"></a>2.2.3 快速检测</h3><p>&emsp;&emsp;首先由训练样本和标签训练检测器，其中训练集是由目标区域和由其移位得到的若干样本组成，对应的标签是根据距离越近正样本可能性越大的准则赋值的，然后可以得到$\alpha$<br>&emsp;&emsp;待分类样本集，即待检测样本集，是由预测区域和由其移位得到的样本集合$z<em>j=P^jz$，那么就可以选择$f(z_j)=\alpha^T\phi(X)\phi(z_j)$最大的样本作为检测出的新目标区域,由$z_j$判断目标移动的位置。<br>&emsp;&emsp;定义$K^z$是测试样本和训练样本间在核空间的核矩阵$K</em>{ij}^z=\phi(z_i)^T\phi(x_j),K^z=\phi(X)\phi(Z)^T$。<br>&emsp;&emsp;由于核矩阵满足$K(x,x’)=K(Px,Px’)$,即$K(x_i,z_j)=K(P^ix,P^jz)$类似于定理1的证明可得$K^z$是循环矩阵。<br>&emsp;&emsp;于是得到各个测试样本的响应  </p>
+<script type="math/tex; mode=display">\begin{aligned}
+f(z) & = (\alpha^T\phi(X)\phi(Z)^T)^T=(K^z)^T\alpha=\mathscr{F}^{-1}(\hat{f}) \\
+f(z) & = Fdiag(\hat{K}^{xz})F^H\alpha \\
+\hat{f} & = (\hat{K}^{xz})^*\hat{\alpha}
+\end{aligned}</script><h3 id="2-2-4-核矩阵的快速计算"><a href="#2-2-4-核矩阵的快速计算" class="headerlink" title="2.2.4 核矩阵的快速计算"></a>2.2.4 核矩阵的快速计算</h3><p>&emsp;&emsp;现在还存在的矩阵运算就是核矩阵的第一行的计算  </p>
+<script type="math/tex; mode=display">K^{xx}=\phi(x)^T\phi(X)^T,K^{xz}=\phi(X)\phi(z)</script><p>&emsp;&emsp;内积和多项式核<br>&emsp;&emsp;这种核函数核矩阵可以表示成$K(x_i,x’_j)=g(x_i^T,x’_j)$，于是  </p>
+<script type="math/tex; mode=display">\begin{aligned}
+K^{xx'} & = g(C(x)x')^T \\
+        & = g(\mathscr{F}^{-1}(\hat{x}^*\odot\hat{x}'))^T
+\end{aligned}</script><p>&emsp;&emsp;因此对于多项式核$K(x_i,x_j)=(x_i^Tx_j+\alpha)^b$有  </p>
+<script type="math/tex; mode=display">K^{xx'}=((\mathscr{F}^{-1}(\hat{x}^*\odot\hat{x}'))^T+\alpha)^b</script><p>&emsp;&emsp;径向基核函数<br>&emsp;&emsp;比如高斯核，这类函数是$\Vert x_i-x_j \Vert^2$的函数  </p>
+<script type="math/tex; mode=display">\Vert x_i-x_j \Vert^2=(x_i-x_j)^T(x_i-x_j)=\Vert x_i \Vert^2+\Vert x_j \Vert^2-2x_i^Tx_j</script><p>&emsp;&emsp;所以  </p>
+<script type="math/tex; mode=display">\begin{aligned}
+K^{xx'} & = h(\Vert x \Vert^2+\Vert x' \Vert^2-2C(x)x')^T  \\
+        & = h(\Vert x \Vert^2+\Vert x' \Vert^2-2\mathscr{F}^{-1}(\hat{x}^*\odot\hat{x}'))^T
+\end{aligned}</script><p>&emsp;&emsp;对于高斯核则有  </p>
+<script type="math/tex; mode=display">K^{xx'}=exp(-\frac{1}{\sigma}(\Vert x \Vert^2+\Vert x' \Vert^2-2\mathscr{F}^{-1}(\hat{x}^*\odot\hat{x}'))^T))</script><p>&emsp;&emsp;以上就是KCF的主要推导公式，且在一维情况下推导的结果，二维情况下的推导类似，推导过程略，详细推导过程见下方参考文档：<br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://www.cnblogs.com/YiXiaoZhou/p/5925019.html">KCF目标跟踪方法分析与总结</a>  </p>
+<h2 id="2-3-代码实现"><a href="#2-3-代码实现" class="headerlink" title="2.3 代码实现"></a>2.3 代码实现</h2><p>伪代码实现：  </p>
+<div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARXo7Q.png width=600/>
+</div>  
+
+<p>c++代码实现：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">KCFTracker::init</span><span class="params">(<span class="keyword">const</span> cv::Rect &amp;roi, cv::Mat image)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    _tmpl = <span class="built_in">getFeatures</span>(image, <span class="number">1</span>);</span><br><span class="line">    _prob = <span class="built_in">createGaussianPeak</span>(size_patch[<span class="number">0</span>], size_patch[<span class="number">1</span>]);</span><br><span class="line">    <span class="built_in">train</span>(_tmpl, <span class="number">1.0</span>); </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">KCFTracker::train</span><span class="params">(cv::Mat x, <span class="keyword">float</span> train_interp_factor)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    cv::Mat k = <span class="built_in">gaussianCorrelation</span>(x, x);</span><br><span class="line">    cv::Mat alphaf = <span class="built_in">complexDivision</span>(_prob, (<span class="built_in">fftd</span>(k) + lambda));</span><br><span class="line">    </span><br><span class="line">    _tmpl = (<span class="number">1</span> - train_interp_factor) * _tmpl + (train_interp_factor) * x;</span><br><span class="line">    _alphaf = (<span class="number">1</span> - train_interp_factor) * _alphaf + (train_interp_factor) * alphaf;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">cv::Point2f <span class="title">KCFTracker::detect</span><span class="params">(cv::Mat z, cv::Mat x, <span class="keyword">float</span> &amp;peak_value)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    cv::Mat k = <span class="built_in">gaussianCorrelation</span>(x, z);</span><br><span class="line">    cv::Mat res = (<span class="built_in">real</span>(<span class="built_in">fftd</span>(<span class="built_in">complexMultiplication</span>(_alphaf, <span class="built_in">fftd</span>(k)), <span class="literal">true</span>)));</span><br><span class="line">    <span class="built_in">minMaxLoc</span>(res, <span class="literal">NULL</span>, &amp;pv, <span class="literal">NULL</span>, &amp;pi);</span><br><span class="line">    peak_value = (<span class="keyword">float</span>) pv;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">cv::Rect <span class="title">KCFTracker::update</span><span class="params">(cv::Mat image)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    cv::Point2f res = <span class="built_in">detect</span>(_tmpl, <span class="built_in">getFeatures</span>(image, <span class="number">0</span>, <span class="number">1.0f</span>), peak_value);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (scale_step != <span class="number">1</span>) &#123;</span><br><span class="line">        cv::Point2f new_res_smaller = <span class="built_in">detect</span>(.., <span class="built_in">getFeatures</span>(.., <span class="number">1.0f</span> / scale_step),..);</span><br><span class="line">        cv::Point2f new_res_bigger = <span class="built_in">detect</span>(.., <span class="built_in">getFeatures</span>(.., scale_step),..);</span><br><span class="line">        ……</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _roi.x = cx - _roi.width / <span class="number">2.0f</span> + ((<span class="keyword">float</span>) res.x * cell_size * _scale);</span><br><span class="line">    _roi.y = cy - _roi.height / <span class="number">2.0f</span> + ((<span class="keyword">float</span>) res.y * cell_size * _scale);</span><br><span class="line"></span><br><span class="line">    cv::Mat x = <span class="built_in">getFeatures</span>(image, <span class="number">0</span>);</span><br><span class="line">    <span class="built_in">train</span>(x, interp_factor);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> _roi;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="2-4-KCF可视化"><a href="#2-4-KCF可视化" class="headerlink" title="2.4 KCF可视化"></a>2.4 KCF可视化</h2><div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARXHts.png />
+</div>  
+
+<h1 id="3-算法优化"><a href="#3-算法优化" class="headerlink" title="3. 算法优化"></a>3. 算法优化</h1><p>&emsp;&emsp;在实际开发的过程中，从刚开始接触KCF源码，到算法部署与优化也进行了不少工作，不过由于年代久远而且当时没有详尽的记录优化内容，所以这里不去深究细节优化。但是在实际的算法部署过程中，在不同的场景下遇到了不同的问题，没有一个算法是可以适配任何场景的，需要的就是开发人员能够针对不同的场景进行对应的优化，解决场景适配问题。<br>&emsp;&emsp;在实际的开发过程中，针对不同的场景，目标跟踪会受到不同的挑战，诸如文章开头提到的外观变形，光照变化，快速运动和运动模糊，背景相似干扰，平面外旋转，平面内旋转，尺度变化，遮挡和出视野等情况。在解决这些问题的过程中，总结技术创新点，并将这些技术创新点形成专利。在整个目标跟踪项目研发过程中，申请了四个发明专利，目前均处于实质审查阶段。在这里不禁又要吐嘈下公司的办事效率，发明专利的申请流程整整在公司内部拖了一年，始终无人问津，如果不是自己去跟踪，估计还要再拖好久。Orz…<br>&emsp;&emsp;主要优化的内容有：引入背景信息和自适应回归标签改善跟踪性能，引入显著性检测提高复杂背景下的跟踪性能，提出一种快速的显著性检测方法等等。比较有意思的工作个人认为是利用颜色标签快速实现显著性检测的相关工作，虽然原理简单，但是对复杂背景下的目标跟踪性能提升是明显的。<br>&emsp;&emsp;现有的KCF算法需要从目标框中提取图像特征，而这些特征往往是诸如hog特征，颜色特征等，对目标图像的表达能力有限。当在一些背景复杂的使用场景中，往往背景的图像纹理信息表达比目标本身更强烈，影响目标特征的提取，更有甚者，将特征表达强烈的图像背景当作需要跟踪的目标，而真实需要跟踪的目标却由于特征表达较弱被当成背景，导致跟踪失败。在一些背景复杂的场景中，这种现象是普遍存在的。因此，如果能够引入一种破坏背景特征，突出目标特征的图像处理技术，就能够从另一维度告诉机器什么是目标，什么是背景，让机器正确跟踪目标。能让人直观联想到的技术便是显著性检测技术，本质就是抠图技术，从图片中将目标提取出来。但是在实验过程中，显著性技术本身往往实现成本更高，同样配置下实现显著性检测的时间比目标跟踪算法本身更多，不利于产品化。基于此，需要构建一种快速的，低计算成本的目标显著性检测方法来解决该问题。<br>&emsp;&emsp;从某些显著性检测原理出发，假设目标图像框最外围像素为背景，基于这些背景由外向内寻找相似像素，通过破坏这些与背景相似的像素便可以达到目的。因此，提出了一种利用颜色标签技术实现快速显著性检测的方法。<br>&emsp;&emsp;具体方案如下：<br>&emsp;&emsp;颜色标签，顾名思义就是将颜色空间中的所有颜色固定分成几个颜色种类，给每个颜色种类分配一个颜色标签。原图如下：  </p>
+<div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARX7kj.png width=250/>
+</div>  
+
+<p>&emsp;&emsp;在Lab颜色空间中将颜色分为$N$个等级，每个颜色等级赋予一个颜色标签数值1~$N$，即分成$N$种颜色，用$N$种颜色代表Lab颜色空间中的所有颜色。<br>&emsp;&emsp;对目标框图像进行子区域划分，分成若干大小均等的子区域，每个子区域大小为$m*n$，尽量使每个子区域的大小保持一致。  </p>
+<div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARXbhn.png width=250/>
+</div>  
+
+<p>&emsp;&emsp;对图片进行颜色空间转换，由RGB颜色空间转换为Lab颜色空间。分别统计每个子区域图像内的像素均值，并且将均值与所标定的$N$种颜色标签的颜色值进行欧式距离计算，选取欧式距离最小的颜色值所对应的颜色标签作为当前子区域对应的颜色标签，进而形成颜色标签图。  </p>
+<div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARXjXT.png width=250/>
+</div>  
+
+<p>&emsp;&emsp;假设颜色标签图最外围的子区域为背景。  </p>
+<div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARXXcV.png width=250/>
+</div>  
+
+<p>&emsp;&emsp;从最外围的每个子区域出发，通过查找子区域之间的连通性，从边界往里搜索，逐个子区域进行扩张，直至查找到与外围子区域相连的所有连通域。  </p>
+<div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARXO10.png width=250/>
+</div>  
+
+<p>&emsp;&emsp;消除所有查找到的连通域，得到只含目标信息的颜色标签图。  </p>
+<div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARjS74.png width=250/>
+</div>  
+
+<p>&emsp;&emsp;将颜色标签图缩放至原始目标矩形框大小。  </p>
+<div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARj9AJ.png width=250/>
+</div>  
+
+<p>&emsp;&emsp;将目标信息突出的图像与原图像画面进行与操作，得到去除背景图像后的只保留目标信息的原图像作为结果。  </p>
+<div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARXzBF.png width=250/>
+</div>  
+
+<p>&emsp;&emsp;通过上述方法，通过建立颜色标签图的方式，能够快速破坏目标框中的背景信息，突出目标特征。在一些场景的实测过程中，发现这种方法能够有效地解决背景复杂导致目标跟踪失败的问题，而且时间开销极少，不影响目标跟踪算法运行，满足实时性要求。<br>&emsp;&emsp;由于篇幅限制，暂不对其他的一些优化方法进行展开，最后贴一个目标跟踪算法实测的魔性gif图。  </p>
+<div align=center>
+<img src=https://s2.ax1x.com/2019/04/05/ARjAc6.gif width=250/>
+</div>  
+<div align=center>
+摩擦，摩擦，似魔鬼的步伐～
+</div>  
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/02/VideoIntegratedPlatform/" rel="next" title="网页播放视频流的去插件化实现">
+                <i class="fa fa-chevron-left"></i> 网页播放视频流的去插件化实现
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/12/DeepStream/" rel="prev" title="NVIDIA DeepStream 简介">
+                NVIDIA DeepStream 简介 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.gif"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%20%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/OrangeAmoy" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E7%AE%97%E6%B3%95%E7%AE%80%E4%BB%8B"><span class="nav-text">1. 算法简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E7%AE%97%E6%B3%95%E6%A1%88%E4%BE%8B"><span class="nav-text">2. 算法案例</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E8%83%8C%E6%99%AF%E4%BB%8B%E7%BB%8D"><span class="nav-text">2.1 背景介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E5%85%AC%E5%BC%8F%E6%8E%A8%E5%AF%BC"><span class="nav-text">2.2 公式推导</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-1-%E4%B8%80%E7%BB%B4%E5%B2%AD%E5%9B%9E%E5%BD%92"><span class="nav-text">2.2.1 一维岭回归</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-1-1-%E5%B2%AD%E5%9B%9E%E5%BD%92"><span class="nav-text">2.2.1.1 岭回归</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-1-2-%E5%BE%AA%E7%8E%AF%E7%9F%A9%E9%98%B5"><span class="nav-text">2.2.1.2 循环矩阵</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-1-3-%E5%BE%AA%E7%8E%AF%E7%9F%A9%E9%98%B5%E5%82%85%E6%B0%8F%E7%A9%BA%E9%97%B4%E5%AF%B9%E8%A7%92%E5%8C%96"><span class="nav-text">2.2.1.3 循环矩阵傅氏空间对角化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-1-4-%E5%82%85%E6%B0%8F%E5%AF%B9%E8%A7%92%E5%8C%96%E7%AE%80%E5%8C%96%E7%9A%84%E5%B2%AD%E5%9B%9E%E5%BD%92"><span class="nav-text">2.2.1.4 傅氏对角化简化的岭回归</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-2-%E6%A0%B8%E7%A9%BA%E9%97%B4%E7%9A%84%E5%B2%AD%E5%9B%9E%E5%BD%92"><span class="nav-text">2.2.2 核空间的岭回归</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-3-%E5%BF%AB%E9%80%9F%E6%A3%80%E6%B5%8B"><span class="nav-text">2.2.3 快速检测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-4-%E6%A0%B8%E7%9F%A9%E9%98%B5%E7%9A%84%E5%BF%AB%E9%80%9F%E8%AE%A1%E7%AE%97"><span class="nav-text">2.2.4 核矩阵的快速计算</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="nav-text">2.3 代码实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-KCF%E5%8F%AF%E8%A7%86%E5%8C%96"><span class="nav-text">2.4 KCF可视化</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E7%AE%97%E6%B3%95%E4%BC%98%E5%8C%96"><span class="nav-text">3. 算法优化</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2019 &mdash; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Orange</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      本站访客数
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      人次
+    </span>
+  
+
+  
+    <span class="site-pv">
+      本站总访问量
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      次
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("Hi9Me1ymYxpbQMv0ODXRUTw0-gzGzoHsz", "CMSESb0qQn5gGNtHhz8cWJT1");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+</body>
+</html>
